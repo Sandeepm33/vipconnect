@@ -2,6 +2,50 @@
 import { format } from 'date-fns';
 import { useState } from 'react';
 
+// WhatsApp-style message tick:
+// single grey  = sent (on server)
+// double grey  = delivered (recipient received)
+// double blue  = read (recipient opened the chat)
+function MessageTick({ message }) {
+  const isRead = message.readBy?.length > 0;
+  const isDelivered = message.deliveredTo?.length > 0;
+
+  // Blue double tick — read
+  if (isRead) {
+    return (
+      <span className="inline-flex items-center" title="Read">
+        <svg width="16" height="11" viewBox="0 0 16 11" fill="none">
+          {/* Left tick */}
+          <path d="M1 5.5L4.5 9L10 2" stroke="#60a5fa" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+          {/* Right tick (offset) */}
+          <path d="M5 5.5L8.5 9L14 2" stroke="#60a5fa" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </span>
+    );
+  }
+
+  // Grey double tick — delivered
+  if (isDelivered) {
+    return (
+      <span className="inline-flex items-center" title="Delivered">
+        <svg width="16" height="11" viewBox="0 0 16 11" fill="none">
+          <path d="M1 5.5L4.5 9L10 2" stroke="#9ca3af" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M5 5.5L8.5 9L14 2" stroke="#9ca3af" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </span>
+    );
+  }
+
+  // Single grey tick — sent
+  return (
+    <span className="inline-flex items-center" title="Sent">
+      <svg width="12" height="11" viewBox="0 0 12 11" fill="none">
+        <path d="M1 5.5L4.5 9L11 2" stroke="#9ca3af" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    </span>
+  );
+}
+
 function FilePreview({ file, type }) {
   if (type === 'image') {
     return (
@@ -156,17 +200,7 @@ export default function MessageBubble({ message, isOwn, showAvatar, isAdmin, onD
               <span className="text-[10px] text-gray-400 italic mr-1">Edited</span>
             )}
             <span className="text-[10px] text-gray-400">{timeStr}</span>
-            {isOwn && !isDeleted && (
-              <svg
-                className={`w-3.5 h-3.5 ${
-                  message.readBy?.length > 0 ? 'text-blue-400' : 'text-gray-400'
-                }`}
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
-              </svg>
-            )}
+            {isOwn && !isDeleted && <MessageTick message={message} />}
           </div>
         </div>
 
