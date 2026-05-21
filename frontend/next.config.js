@@ -8,6 +8,11 @@ const nextConfig = {
         port: '5000',
         pathname: '/uploads/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'vipconnect.onrender.com',
+        pathname: '/uploads/**',
+      },
     ],
   },
   // For PWA support in future
@@ -21,18 +26,19 @@ const nextConfig = {
     },
   ],
   async rewrites() {
+    const backendUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000';
     return [
       {
         source: '/api/:path*',
-        destination: 'http://localhost:5000/api/:path*',
+        destination: `${backendUrl}/api/:path*`,
       },
       {
         source: '/socket.io/:path*',
-        destination: 'http://localhost:5000/socket.io/:path*',
+        destination: `${backendUrl}/socket.io/:path*`,
       },
       {
         source: '/uploads/:path*',
-        destination: 'http://localhost:5000/uploads/:path*',
+        destination: `${backendUrl}/uploads/:path*`,
       }
     ];
   },

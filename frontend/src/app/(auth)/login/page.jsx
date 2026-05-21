@@ -26,8 +26,15 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-chat-bg flex flex-col md:flex-row overflow-hidden">
+    <div className="min-h-screen w-full bg-chat-bg flex flex-col md:flex-row overflow-hidden relative">
       
+      {/* Back to Home Button */}
+      <Link href="/" className="absolute top-6 left-6 z-50 flex items-center gap-2 text-gray-400 hover:text-white transition-colors bg-black/20 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 hover:border-primary-500/50 group shadow-lg">
+        <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        <span className="text-sm font-medium hidden sm:block">Back to Home</span>
+      </Link>
       {/* Left side: Premium Branding & Visuals */}
       <div className="hidden md:flex flex-1 relative bg-chat-header flex-col justify-between p-12 overflow-hidden border-r border-chat-border">
         {/* Animated Background */}
