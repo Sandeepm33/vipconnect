@@ -113,11 +113,12 @@ export default function ChatWindow() {
       <div className="flex flex-col h-full">
         {/* Chat Header */}
         <div className="flex items-center justify-between px-4 py-3 bg-chat-header border-b border-chat-border flex-shrink-0">
-          <div className="flex items-center gap-3">
+          {/* Left: back button + avatar + name — must shrink to leave room for buttons */}
+          <div className="flex items-center gap-3 min-w-0 flex-1">
             {/* Mobile Back Button */}
             <button 
               onClick={() => router.push('/chat')}
-              className="md:hidden p-2 -ml-2 text-gray-400 hover:text-white transition-colors rounded-xl hover:bg-white/10"
+              className="md:hidden p-2 -ml-2 text-gray-400 hover:text-white transition-colors rounded-xl hover:bg-white/10 flex-shrink-0"
               title="Back to chats"
             >
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -126,10 +127,10 @@ export default function ChatWindow() {
             </button>
 
             <div
-              className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+              className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity min-w-0"
               onClick={() => activeChat?.isGroup && setShowGroupInfo(true)}
             >
-            <div className="relative">
+            <div className="relative flex-shrink-0">
               <div className="w-10 h-10 rounded-full overflow-hidden bg-dark-600 flex items-center justify-center">
                 {avatarUrl ? (
                   <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
@@ -142,9 +143,9 @@ export default function ChatWindow() {
               {isOnline && <div className="online-dot" />}
             </div>
 
-            <div>
-              <h2 className="text-white font-semibold text-sm">{displayName}</h2>
-              <p className="text-xs">
+            <div className="min-w-0">
+              <h2 className="text-white font-semibold text-sm truncate">{displayName}</h2>
+              <p className="text-xs truncate">
                 {typingNames.length > 0 ? (
                   <span className="text-primary-400 animate-pulse">
                     {typingNames.join(', ')} {typingNames.length === 1 ? 'is' : 'are'} typing...
@@ -163,8 +164,8 @@ export default function ChatWindow() {
           </div>
           </div>
 
-          {/* Call buttons */}
-          <div className="flex items-center gap-1">
+          {/* Call buttons — flex-shrink-0 keeps them always visible on mobile */}
+          <div className="flex items-center gap-1 flex-shrink-0">
             <button
               id="audio-call-btn"
               onClick={() => handleCall('audio')}
