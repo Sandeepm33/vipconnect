@@ -42,7 +42,7 @@ export default function MainLayout({ children }) {
   const isChatRoute = pathname.startsWith('/chat/');
 
   return (
-    <div className="h-screen w-full flex overflow-hidden bg-chat-bg">
+    <div className="h-[100dvh] w-full flex overflow-hidden bg-chat-bg">
       <SocketInitializer />
 
       {/* Sidebar — hidden on mobile when inside a chat */}
