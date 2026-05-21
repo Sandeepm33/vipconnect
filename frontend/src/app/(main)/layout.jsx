@@ -45,13 +45,13 @@ export default function MainLayout({ children }) {
     <div className="h-screen w-full flex overflow-hidden bg-chat-bg">
       <SocketInitializer />
 
-      {/* Sidebar */}
-      <div className={`h-full w-full md:w-auto flex-shrink-0 transition-all ${isChatRoute ? 'hidden md:block' : 'block'}`}>
+      {/* Sidebar — hidden on mobile when inside a chat */}
+      <div className={`h-full flex-shrink-0 ${isChatRoute ? 'hidden md:flex' : 'flex w-full md:w-auto'}`}>
         <Sidebar />
       </div>
 
-      {/* Main Content */}
-      <main className={`flex-1 flex flex-col overflow-hidden transition-all ${!isChatRoute ? 'hidden md:flex' : 'flex'}`}>
+      {/* Main Content — full width on mobile when inside a chat */}
+      <main className={`flex flex-col overflow-hidden ${!isChatRoute ? 'hidden md:flex flex-1' : 'flex flex-1 w-full'}`}>
         {children}
       </main>
 
