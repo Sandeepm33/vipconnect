@@ -23,16 +23,18 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-chat-bg text-white selection:bg-primary-500/30 overflow-x-hidden relative">
-      {/* Background decorations */}
+      {/* ── Full-bleed hero background — your group photo ── */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <img src="/home_hero_bg.png" alt="Hero Background" className="w-full h-full object-cover opacity-20 blur-sm mix-blend-screen" />
-          <div className="absolute inset-0 bg-gradient-to-b from-chat-bg/80 via-chat-bg/50 to-chat-bg" />
-        </div>
-        <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-primary-500/10 blur-[120px] animate-pulse-soft z-0" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-blue-500/10 blur-[150px] z-0" />
-        <div className="absolute top-[40%] left-[50%] translate-x-[-50%] w-[800px] h-[800px] rounded-full bg-primary-500/5 blur-[150px] pointer-events-none z-0" />
+        <img
+          src="/main.jpg"
+          alt="VipConnect Community"
+          className="w-full h-[100dvh] object-cover object-center"
+          style={{ objectPosition: 'center 30%' }}
+        />
+        {/* Completely clear backdrop layout: no dark overlay or blur filters, only a light vignette gradient at the top for nav readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-transparent" />
       </div>
+
 
       {/* Navbar */}
       <nav className="relative z-10 flex items-center justify-between px-8 py-6 max-w-7xl mx-auto">
@@ -42,7 +44,7 @@ export default function Home() {
               <path d="M12 2C6.48 2 2 6.48 2 12c0 1.85.5 3.58 1.37 5.07L2 22l4.93-1.37A9.96 9.96 0 0012 22c5.52 0 10-4.48 10-10S17.52 2 12 2z" />
             </svg>
           </div>
-          <span className="font-bold text-xl tracking-tight">VipConnect</span>
+          <span className="font-bold text-xl tracking-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">VipConnect</span>
         </div>
         <div className="flex items-center gap-4">
           {isAuthenticated ? (
@@ -51,7 +53,7 @@ export default function Home() {
             </Link>
           ) : (
             <>
-              <Link href="/login" className="text-gray-300 hover:text-white px-4 py-2 font-medium transition-colors">
+              <Link href="/login" className="text-gray-300 hover:text-white px-4 py-2 font-medium transition-colors drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
                 Sign In
               </Link>
               <Link href="/register" className="btn-primary px-6 py-2 rounded-full font-medium transition-transform hover:scale-105 active:scale-95 shadow-lg shadow-primary-500/25">
@@ -64,19 +66,19 @@ export default function Home() {
 
       {/* Hero Section */}
       <main className="relative z-10 max-w-7xl mx-auto px-8 pt-20 pb-32 flex flex-col items-center text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 mb-8 backdrop-blur-xl animate-fade-in shadow-xl shadow-black/50">
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 border border-white/10 mb-8 backdrop-blur-md animate-fade-in shadow-xl shadow-black/50">
           <span className="w-2 h-2 rounded-full bg-primary-500 animate-pulse" />
           <span className="text-sm font-medium text-white">New features: Advanced Group Admin Controls & Real-time Editing</span>
         </div>
 
-        <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-8 leading-tight animate-slide-in-right">
+        <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-8 leading-tight animate-slide-in-right drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)]">
           Connect Seamlessly <br />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-emerald-400">
             Without Boundaries
           </span>
         </h1>
 
-        <p className="text-lg md:text-xl text-gray-400 max-w-2xl mb-12 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+        <p className="text-lg md:text-xl text-gray-200 max-w-2xl mb-12 animate-fade-in drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]" style={{ animationDelay: '0.2s' }}>
           Experience real-time messaging, high-quality audio and video calls, and comprehensive group management all in one place. Fast, secure, and beautiful.
         </p>
 
@@ -165,23 +167,17 @@ export default function Home() {
             </div>
             <div className="flex-1 relative">
               <div className="absolute inset-0 bg-gradient-to-r from-primary-500 to-blue-500 blur-3xl opacity-20 rounded-full" />
-              <div className="relative glass-card border border-white/10 rounded-3xl p-8 overflow-hidden shadow-2xl">
-                {/* Mock UI for visual appeal */}
-                <div className="flex items-center gap-4 mb-6 pb-6 border-b border-white/10">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-emerald-600" />
-                  <div>
-                    <div className="h-4 w-32 bg-white/20 rounded-full mb-2" />
-                    <div className="h-3 w-20 bg-white/10 rounded-full" />
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <div className="flex items-end gap-2">
-                    <div className="w-8 h-8 rounded-full bg-white/10" />
-                    <div className="h-10 w-48 bg-white/10 rounded-2xl rounded-bl-none" />
-                  </div>
-                  <div className="flex items-end justify-end gap-2">
-                    <div className="h-10 w-64 bg-primary-500/40 rounded-2xl rounded-br-none" />
-                  </div>
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/10">
+                <img
+                  src="/main.jpg"
+                  alt="VipConnect community — friends connecting"
+                  className="w-full h-72 object-cover"
+                  style={{ objectPosition: 'center 40%' }}
+                />
+                {/* Caption overlay */}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent px-6 py-4">
+                  <p className="text-white font-semibold text-sm">Stay connected with your crew 🤝</p>
+                  <p className="text-gray-400 text-xs mt-0.5">VipConnect brings your people together</p>
                 </div>
               </div>
             </div>

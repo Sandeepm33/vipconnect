@@ -27,7 +27,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen w-full bg-chat-bg flex flex-col md:flex-row overflow-hidden relative">
-      
+
       {/* Back to Home Button */}
       <Link href="/" className="absolute top-6 left-6 z-50 flex items-center gap-2 text-gray-400 hover:text-white transition-colors bg-black/20 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 hover:border-primary-500/50 group shadow-lg">
         <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -35,27 +35,35 @@ export default function LoginPage() {
         </svg>
         <span className="text-sm font-medium hidden sm:block">Back to Home</span>
       </Link>
-      {/* Left side: Premium Branding & Visuals */}
-      <div className="hidden md:flex flex-1 relative bg-chat-header flex-col justify-between p-12 overflow-hidden border-r border-chat-border">
-        {/* Animated Background */}
-        <div className="absolute inset-0 pointer-events-none z-0">
-          <img src="/login_bg.png" alt="Login Background" className="w-full h-full object-cover opacity-30 mix-blend-screen" />
-          <div className="absolute inset-0 bg-gradient-to-t from-chat-header via-transparent to-chat-header/50" />
+      {/* Left side: Premium Branding & Visuals (62% width on desktop) */}
+      <div className="hidden md:flex md:w-[62%] flex-shrink-0 relative bg-chat-header flex-col justify-between p-12 overflow-hidden border-r border-chat-border">
+        {/* Background Video - Contain aspect ratio so full video fits, clear & no blur */}
+        <div className="absolute inset-0 pointer-events-none z-0 bg-black flex items-center justify-center">
+          <video
+            src="/vips.mp4"
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-full object-cover"
+          />
+          {/* Subtle gradient for text legibility while leaving the center clear & unblurred */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/45" />
         </div>
 
         <div className="relative z-10 animate-fade-in">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center mb-6 shadow-xl shadow-primary-500/30">
             <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2C6.48 2 2 6.48 2 12c0 1.85.5 3.58 1.37 5.07L2 22l4.93-1.37A9.96 9.96 0 0012 22c5.52 0 10-4.48 10-10S17.52 2 12 2z"/>
+              <path d="M12 2C6.48 2 2 6.48 2 12c0 1.85.5 3.58 1.37 5.07L2 22l4.93-1.37A9.96 9.96 0 0012 22c5.52 0 10-4.48 10-10S17.52 2 12 2z" />
             </svg>
           </div>
-          <h1 className="text-4xl font-bold text-white mb-4">VipConnect</h1>
-          <p className="text-gray-400 max-w-sm text-lg">
+          <h1 className="text-4xl font-bold text-white mb-4 drop-shadow-md">VipConnect</h1>
+          <p className="text-gray-200 max-w-sm text-lg font-medium drop-shadow-md">
             A premium communication platform for the modern world. Secure, fast, and feature-rich.
           </p>
         </div>
 
-        <div className="relative z-10 glass-card p-6 rounded-3xl max-w-md animate-slide-in-left" style={{ animationDelay: '0.2s' }}>
+        <div className="relative z-10 glass-card bg-black/20 backdrop-blur-md border border-white/10 p-6 rounded-3xl max-w-md animate-slide-in-left" style={{ animationDelay: '0.2s' }}>
           <div className="flex gap-4 items-center">
             <div className="w-12 h-12 rounded-full bg-primary-500/20 flex items-center justify-center text-primary-400">
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -64,20 +72,20 @@ export default function LoginPage() {
             </div>
             <div>
               <h4 className="text-white font-semibold">New: Advanced Groups</h4>
-              <p className="text-sm text-gray-400">Manage your communities with our new WhatsApp-style admin tools.</p>
+              <p className="text-sm text-gray-200 drop-shadow-sm">Manage your communities with our new WhatsApp-style admin tools.</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Right side: Login Form */}
-      <div className="flex-1 flex flex-col justify-center items-center p-6 md:p-12 relative">
+      {/* Right side: Login Form (38% width on desktop) */}
+      <div className="w-full md:w-[38%] flex-shrink-0 flex flex-col justify-center items-center p-6 md:p-12 relative bg-chat-bg">
         <div className="w-full max-w-md animate-scale-in">
           {/* Mobile Logo */}
           <div className="md:hidden text-center mb-10">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-primary-500/30">
               <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C6.48 2 2 6.48 2 12c0 1.85.5 3.58 1.37 5.07L2 22l4.93-1.37A9.96 9.96 0 0012 22c5.52 0 10-4.48 10-10S17.52 2 12 2z"/>
+                <path d="M12 2C6.48 2 2 6.48 2 12c0 1.85.5 3.58 1.37 5.07L2 22l4.93-1.37A9.96 9.96 0 0012 22c5.52 0 10-4.48 10-10S17.52 2 12 2z" />
               </svg>
             </div>
             <h1 className="text-3xl font-bold text-white">VipConnect</h1>
