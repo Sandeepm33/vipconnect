@@ -27,6 +27,25 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen w-full bg-chat-bg flex flex-col md:flex-row overflow-hidden relative">
+      {/* Background Video - spans full screen on mobile, left 62% on desktop */}
+      <div className="fixed inset-0 md:absolute md:inset-y-0 md:left-0 md:w-[62%] pointer-events-none z-0 bg-black flex items-center justify-center overflow-hidden">
+        {/* Blurred background image layer to prevent black bars on mobile */}
+        <img
+          src="/main.jpg"
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-25 md:hidden"
+        />
+        <video
+          src="/vips.mp4"
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full h-full object-contain md:object-cover"
+        />
+        {/* Subtle gradient overlay for text legibility (heavier on mobile for card readability) */}
+        <div className="absolute inset-0 bg-black/60 md:bg-gradient-to-t md:from-black/60 md:via-transparent md:to-black/45" />
+      </div>
 
       {/* Back to Home Button */}
       <Link href="/" className="absolute top-6 left-6 z-50 flex items-center gap-2 text-gray-400 hover:text-white transition-colors bg-black/20 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 hover:border-primary-500/50 group shadow-lg">
@@ -35,22 +54,9 @@ export default function LoginPage() {
         </svg>
         <span className="text-sm font-medium hidden sm:block">Back to Home</span>
       </Link>
-      {/* Left side: Premium Branding & Visuals (62% width on desktop) */}
-      <div className="hidden md:flex md:w-[62%] flex-shrink-0 relative bg-chat-header flex-col justify-between p-12 overflow-hidden border-r border-chat-border">
-        {/* Background Video - Contain aspect ratio so full video fits, clear & no blur */}
-        <div className="absolute inset-0 pointer-events-none z-0 bg-black flex items-center justify-center">
-          <video
-            src="/vips.mp4"
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-full h-full object-cover"
-          />
-          {/* Subtle gradient for text legibility while leaving the center clear & unblurred */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/45" />
-        </div>
 
+      {/* Left side: Premium Branding & Visuals (62% width on desktop) */}
+      <div className="hidden md:flex md:w-[62%] flex-shrink-0 relative bg-transparent flex-col justify-between p-12 overflow-hidden border-r border-chat-border z-10">
         <div className="relative z-10 animate-fade-in">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center mb-6 shadow-xl shadow-primary-500/30">
             <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -79,10 +85,10 @@ export default function LoginPage() {
       </div>
 
       {/* Right side: Login Form (38% width on desktop) */}
-      <div className="w-full md:w-[38%] flex-shrink-0 flex flex-col justify-center items-center p-6 md:p-12 relative bg-chat-bg">
-        <div className="w-full max-w-md animate-scale-in">
+      <div className="w-full md:w-[38%] flex-shrink-0 flex flex-col justify-center items-center p-6 md:p-12 relative bg-transparent md:bg-chat-bg z-10">
+        <div className="w-full max-w-md animate-scale-in bg-black/40 backdrop-blur-xl border border-white/10 md:border-none md:bg-transparent md:backdrop-blur-none p-6 sm:p-8 rounded-3xl md:p-0">
           {/* Mobile Logo */}
-          <div className="md:hidden text-center mb-10">
+          <div className="md:hidden text-center mb-8">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-primary-500/30">
               <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 2C6.48 2 2 6.48 2 12c0 1.85.5 3.58 1.37 5.07L2 22l4.93-1.37A9.96 9.96 0 0012 22c5.52 0 10-4.48 10-10S17.52 2 12 2z" />
@@ -91,7 +97,7 @@ export default function LoginPage() {
             <h1 className="text-3xl font-bold text-white">VipConnect</h1>
           </div>
 
-          <div className="text-center md:text-left mb-10">
+          <div className="text-center md:text-left mb-8">
             <h2 className="text-3xl font-bold text-white mb-2">Welcome back</h2>
             <p className="text-gray-400">Please enter your details to sign in.</p>
           </div>

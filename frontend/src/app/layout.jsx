@@ -23,7 +23,7 @@ export default function RootLayout({ children }) {
           rel="stylesheet"
         />
       </head>
-      <body className={`${inter.className} bg-chat-bg text-gray-100 h-[100dvh] overflow-hidden`}>
+      <body className={`${inter.className} bg-chat-bg text-gray-100 min-h-screen`}>
         {children}
         <Toaster
           position="top-center"
