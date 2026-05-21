@@ -6,6 +6,29 @@ const User = require('../models/User');
 const { protect } = require('../middleware/auth');
 const upload = require('../middleware/upload');
 
+// @route  POST /api/users/sync-contacts
+// Accepts array of phone numbers, returns matched VipConnect users
+router.post(
+  '/sync-contacts',
+  protect,
+  asyncHandler(async (req, res) => {
+    const { phones } = req.body; // array of phone number strings
+    if (!Array.isArray(phones) || phones.length === 0) {
+      return res.json({ success: true, users: [] });
+    }
+
+    // Normalize: strip all non-digit chars except leading +
+    const normalized = phones.map((p) => p.replace(/[^\d+]/g, ''));
+
+    const users = await User.find({
+      _id: { $ne: req.user._id },
+      phone: { $in: normalized },
+    }).select('name email phone avatar about status lastSeen');
+
+    res.json({ success: true, users });
+  })
+);
+
 // @route  GET /api/users/search?q=
 router.get(
   '/search',
