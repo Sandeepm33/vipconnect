@@ -113,7 +113,7 @@ export default function Home() {
         <div className="flex items-center gap-2 sm:gap-4">
           {isAuthenticated ? (
             <Link href="/chat" className="btn-primary px-4 py-2 sm:px-6 rounded-full text-sm sm:text-base font-medium transition-transform hover:scale-105 active:scale-95 shadow-lg shadow-primary-500/25">
-              Open WebApp
+              Open WebApplication
             </Link>
           ) : (
             <>
@@ -181,7 +181,7 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 mt-16 sm:mt-32 w-full max-w-5xl">
           <div className="bg-chat-panel/50 backdrop-blur-sm border border-chat-border p-6 sm:p-8 rounded-2xl sm:rounded-3xl text-left hover:border-primary-500/30 transition-colors">
             <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center mb-6 text-blue-400">
-               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
               </svg>
             </div>
@@ -191,7 +191,7 @@ export default function Home() {
 
           <div className="bg-chat-panel/50 backdrop-blur-sm border border-chat-border p-6 sm:p-8 rounded-2xl sm:rounded-3xl text-left hover:border-primary-500/30 transition-colors transform md:-translate-y-4">
             <div className="w-12 h-12 rounded-2xl bg-primary-500/10 flex items-center justify-center mb-6 text-primary-400">
-               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
             </div>
@@ -201,7 +201,7 @@ export default function Home() {
 
           <div className="bg-chat-panel/50 backdrop-blur-sm border border-chat-border p-6 sm:p-8 rounded-2xl sm:rounded-3xl text-left hover:border-primary-500/30 transition-colors">
             <div className="w-12 h-12 rounded-2xl bg-purple-500/10 flex items-center justify-center mb-6 text-purple-400">
-               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
             </div>
@@ -219,7 +219,7 @@ export default function Home() {
                 <span className="text-primary-400">designed for you.</span>
               </h2>
               <p className="text-base sm:text-lg text-gray-400">
-                Whether you're coordinating with colleagues, managing a large community, or just chatting with friends, VipConnect offers unparalleled flexibility and control. 
+                Whether you're coordinating with colleagues, managing a large community, or just chatting with friends, VipConnect offers unparalleled flexibility and control.
               </p>
               <ul className="space-y-4">
                 <li className="flex items-center gap-3 text-sm sm:text-base text-gray-300">
@@ -368,11 +368,10 @@ export default function Home() {
                 <div className="space-y-4 overflow-y-auto max-h-full no-scrollbar">
                   {messages.map((msg) => (
                     <div key={msg.id} className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm shadow-md border ${
-                        msg.sender === 'me' 
-                          ? 'bg-primary-900/60 border-primary-800/40 text-white rounded-tr-none' 
+                      <div className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm shadow-md border ${msg.sender === 'me'
+                          ? 'bg-primary-900/60 border-primary-800/40 text-white rounded-tr-none'
                           : 'bg-chat-bubble_in border-white/5 text-gray-200 rounded-tl-none'
-                      }`}>
+                        }`}>
                         <p className="leading-relaxed break-words">{msg.text}</p>
                         <span className="block text-[9px] text-gray-400 text-right mt-1">{msg.time}</span>
                       </div>
@@ -428,7 +427,7 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-chat-panel/40 p-6 sm:p-8 rounded-2xl sm:rounded-3xl border border-chat-border relative text-left transform md:-translate-y-4">
               <div className="text-blue-500 mb-4">
                 <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" /></svg>
@@ -505,9 +504,8 @@ export default function Home() {
                   </svg>
                 </button>
                 <div
-                  className={`transition-all duration-300 ease-in-out overflow-hidden ${
-                    openFaq === idx ? 'max-h-40 border-t border-chat-border/20' : 'max-h-0'
-                  }`}
+                  className={`transition-all duration-300 ease-in-out overflow-hidden ${openFaq === idx ? 'max-h-40 border-t border-chat-border/20' : 'max-h-0'
+                    }`}
                 >
                   <p className="px-6 py-5 text-xs sm:text-sm text-gray-400 leading-relaxed bg-[#0d1117]/30">
                     {item.a}
@@ -556,13 +554,13 @@ export default function Home() {
               <div className="flex gap-4">
                 {/* Social links */}
                 <a href="#" className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-primary-400 hover:bg-white/10 transition-all">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg>
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" /></svg>
                 </a>
                 <a href="#" className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-primary-400 hover:bg-white/10 transition-all">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" /></svg>
                 </a>
                 <a href="#" className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-primary-400 hover:bg-white/10 transition-all">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.3 3H3.7C3.3 3 3 3.3 3 3.7v16.7c0 .4.3.7.7.7h16.6c.4 0 .7-.3.7-.7V3.7c0-.4-.3-.7-.7-.7zM8.5 17.5H5.8V9h2.7v8.5zM7.2 7.8c-.8 0-1.5-.7-1.5-1.5S6.4 4.8 7.2 4.8s1.5.7 1.5 1.5-.7 1.5-1.5 1.5zm10.3 9.7h-2.7V13c0-1.1-.9-2-2-2s-2 .9-2 2v4.5H8.1V9h2.7v1.2c.5-.8 1.6-1.4 2.7-1.4 2.2 0 4 1.8 4 4v4.7z"/></svg>
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.3 3H3.7C3.3 3 3 3.3 3 3.7v16.7c0 .4.3.7.7.7h16.6c.4 0 .7-.3.7-.7V3.7c0-.4-.3-.7-.7-.7zM8.5 17.5H5.8V9h2.7v8.5zM7.2 7.8c-.8 0-1.5-.7-1.5-1.5S6.4 4.8 7.2 4.8s1.5.7 1.5 1.5-.7 1.5-1.5 1.5zm10.3 9.7h-2.7V13c0-1.1-.9-2-2-2s-2 .9-2 2v4.5H8.1V9h2.7v1.2c.5-.8 1.6-1.4 2.7-1.4 2.2 0 4 1.8 4 4v4.7z" /></svg>
                 </a>
               </div>
             </div>
