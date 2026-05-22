@@ -55,10 +55,15 @@ export default function CallWindow() {
       durationRef.current = setInterval(() => setCallDuration((d) => d + 1), 1000);
 
       // Connect to participants already in the room (e.g. callee sees existing members)
+      // To prevent WebRTC glare (both sides sending an offer), we use a deterministic rule:
+      // only the peer with the lexicographically greater socket ID initiates the connection.
       const { callParticipants, peerConnections } = useCallStore.getState();
+      const mySocketId = getSocket()?.id;
       for (const p of callParticipants) {
         if (!peerConnections[p.socketId] && !cancelled) {
-          await connectToPeer(p.socketId, stream, activeCall.roomId, p.user);
+          if (mySocketId > p.socketId) {
+            await connectToPeer(p.socketId, stream, activeCall.roomId, p.user);
+          }
         }
       }
 
@@ -100,9 +105,12 @@ export default function CallWindow() {
       const stream = useCallStore.getState().localStream;
       if (!stream) return; // startCall hasn't gotten media yet; it will handle these
       const { peerConnections } = useCallStore.getState();
+      const mySocketId = socket.id;
       for (const p of participants) {
         if (!peerConnections[p.socketId]) {
-          await connectToPeer(p.socketId, stream, activeCallRef.current?.roomId, p.user);
+          if (mySocketId > p.socketId) {
+            await connectToPeer(p.socketId, stream, activeCallRef.current?.roomId, p.user);
+          }
         }
       }
     };
@@ -113,8 +121,11 @@ export default function CallWindow() {
       const stream = useCallStore.getState().localStream;
       if (!stream) return;
       const { peerConnections } = useCallStore.getState();
+      const mySocketId = socket.id;
       if (!peerConnections[socketId]) {
-        await connectToPeer(socketId, stream, activeCallRef.current?.roomId, pUser);
+        if (mySocketId > socketId) {
+          await connectToPeer(socketId, stream, activeCallRef.current?.roomId, pUser);
+        }
       }
     };
 
