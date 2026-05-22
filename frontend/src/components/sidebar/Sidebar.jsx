@@ -18,7 +18,7 @@ export default function Sidebar() {
 
   const handleLogout = () => {
     logout();
-    router.push('/login');
+    window.location.href = '/login';
   };
 
   const avatarUrl = user?.avatar?.url || null;
@@ -34,7 +34,7 @@ export default function Sidebar() {
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-24 bg-primary-500/5 blur-3xl rounded-full pointer-events-none" />
 
         {/* ── Header ─────────────────────────────────────────────────────── */}
-        <div className="relative flex items-center justify-between px-4 py-3 border-b z-10"
+        <div className="relative flex items-center justify-between px-4 py-3 border-b z-50"
           style={{ borderColor: 'rgba(45,55,72,0.6)', background: 'rgba(17,24,39,0.8)', backdropFilter: 'blur(12px)' }}
         >
           {/* Left: App brand + user */}

@@ -43,6 +43,7 @@ const useAuthStore = create(
 
       logout: () => {
         localStorage.removeItem('vipconnect_token');
+        localStorage.removeItem('vipconnect_user');
         disconnectSocket();
         set({ user: null, token: null, isAuthenticated: false });
       },
