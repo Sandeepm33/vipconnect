@@ -70,12 +70,12 @@ html, body {
   }
 
   .sidebar-item {
-    @apply flex items-center gap-3 px-4 py-3 hover:bg-white/5 cursor-pointer
-           transition-all duration-150 border-b border-chat-border/30;
+    @apply flex items-center gap-3 px-4 py-3.5 cursor-pointer
+           transition-all duration-150;
   }
 
   .sidebar-item.active {
-    @apply bg-white/10 border-l-2 border-primary-500;
+    @apply bg-primary-500/10 border-l-[3px] border-primary-500;
   }
 
   .avatar {
@@ -116,6 +116,12 @@ html, body {
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
+  /* Allow hover:bg-white/4 and hover:bg-white/8 */
+  .hover\:bg-white\/4:hover { background-color: rgba(255,255,255,0.04); }
+  .hover\:bg-white\/8:hover { background-color: rgba(255,255,255,0.08); }
+  .bg-white\/4 { background-color: rgba(255,255,255,0.04); }
+  .bg-white\/8 { background-color: rgba(255,255,255,0.08); }
 }
 
 /* Message animations */

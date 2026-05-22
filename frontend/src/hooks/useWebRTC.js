@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useRef, useEffect } from 'react';
+import { useCallback, useRef } from 'react';
 import { getSocket } from '@/lib/socket';
 import useCallStore from '@/store/callStore';
 import toast from 'react-hot-toast';
@@ -12,219 +12,235 @@ const ICE_SERVERS = {
   ],
 };
 
+// Global ICE queue — persists across hook instances
+const globalIceQueue = {};
+
 const useWebRTC = () => {
-  const socket = getSocket();
-  const {
-    addPeerConnection,
-    removePeerConnection,
-    addRemoteStream,
-    removeRemoteStream,
-    setLocalStream,
-    setMediaPromise,
-    addParticipant,
-    removeParticipant,
-    peerConnections,
-  } = useCallStore();
-
   const localStreamRef = useRef(null);
-  const isMounted = useRef(true);
-  const globalIceQueue = useRef({});
 
-  useEffect(() => {
-    isMounted.current = true;
-    return () => {
-      isMounted.current = false;
-    };
-  }, []);
-
-  // Get user media
+  // ─── Get local media stream ──────────────────────────────────────────────
   const getLocalStream = useCallback(async (video = true, audio = true) => {
     try {
-      const { mediaPromise, localStream } = useCallStore.getState();
-      
-      // If we already have a stream, return it
+      const { localStream } = useCallStore.getState();
       if (localStream) return localStream;
 
-      // If a request is already in flight, wait for it
-      if (mediaPromise) {
-        const stream = await mediaPromise;
-        if (stream) return stream;
-      }
-
-      // Create a new request and store the promise globally
-      const promise = navigator.mediaDevices.getUserMedia({ video, audio });
-      setMediaPromise(promise);
-
-      const stream = await promise;
-      
-      if (!isMounted.current) {
-        stream.getTracks().forEach(t => t.stop());
-        setMediaPromise(null);
-        return null;
-      }
-      
+      const stream = await navigator.mediaDevices.getUserMedia({ video, audio });
       localStreamRef.current = stream;
-      setLocalStream(stream);
-      setMediaPromise(null);
+      useCallStore.getState().setLocalStream(stream);
       return stream;
     } catch (err) {
       console.error('getUserMedia error:', err);
-      toast.error('Could not access camera/microphone');
-      setMediaPromise(null);
-      throw err;
-    }
-  }, [setLocalStream, setMediaPromise]);
-
-  // Create a peer connection with a remote peer
-  const createPeerConnection = useCallback(
-    (remoteSocketId, localStream, roomId) => {
-      const pc = new RTCPeerConnection(ICE_SERVERS);
-
-      // Add local tracks
-      localStream.getTracks().forEach((track) => {
-        pc.addTrack(track, localStream);
-      });
-
-      pc.ontrack = (event) => {
-        // Create a completely new MediaStream using the tracks from the event stream
-        // This forces React to detect a state change and re-assign srcObject
-        const eventStream = event.streams && event.streams[0] ? event.streams[0] : new MediaStream([event.track]);
-        const newStream = new MediaStream(eventStream.getTracks());
-        
-        const { callParticipants } = useCallStore.getState();
-        const pUser = callParticipants.find((p) => p.socketId === remoteSocketId)?.user || null;
-        addRemoteStream(remoteSocketId, newStream, pUser);
-      };
-
-      // Handle ICE candidates
-      pc.onicecandidate = (event) => {
-        if (event.candidate) {
-          socket?.emit('webrtc_ice_candidate', {
-            targetSocketId: remoteSocketId,
-            candidate: event.candidate,
-            roomId,
-          });
-        }
-      };
-
-      pc.onconnectionstatechange = () => {
-        if (['disconnected', 'failed', 'closed'].includes(pc.connectionState)) {
-          removeRemoteStream(remoteSocketId);
-          removeParticipant(remoteSocketId);
-        }
-      };
-
-      addPeerConnection(remoteSocketId, pc);
-
-      // Add any globally queued ICE candidates that arrived before PC was created
-      if (globalIceQueue.current[remoteSocketId]) {
-        pc.iceQueue = (pc.iceQueue || []).concat(globalIceQueue.current[remoteSocketId]);
-        delete globalIceQueue.current[remoteSocketId];
+      if (err.name === 'NotAllowedError') {
+        toast.error('Camera/microphone access denied. Please allow permissions.');
+      } else if (err.name === 'NotFoundError') {
+        toast.error('No camera/microphone found.');
+      } else {
+        toast.error('Could not access camera/microphone');
       }
+      return null;
+    }
+  }, []);
 
-      return pc;
-    },
-    [socket, addPeerConnection, addRemoteStream, removeRemoteStream, removeParticipant]
-  );
+  // ─── Create a peer connection ────────────────────────────────────────────
+  const createPeerConnection = useCallback((remoteSocketId, localStream, roomId) => {
+    const socket = getSocket();
+    const pc = new RTCPeerConnection(ICE_SERVERS);
 
-  // Initiate connection to a new participant (send offer)
-  const connectToPeer = useCallback(
-    async (remoteSocketId, localStream, roomId, user) => {
-      addParticipant({ socketId: remoteSocketId, user, videoEnabled: true, audioEnabled: true });
-      const pc = createPeerConnection(remoteSocketId, localStream, roomId);
+    // Add local tracks to the peer connection
+    localStream.getTracks().forEach((track) => {
+      pc.addTrack(track, localStream);
+    });
+
+    // When we receive remote tracks, add to store
+    pc.ontrack = (event) => {
+      const incomingStream = event.streams?.[0];
+      const newStream = incomingStream
+        ? new MediaStream(incomingStream.getTracks())
+        : new MediaStream([event.track]);
+
+      const { callParticipants } = useCallStore.getState();
+      const pUser = callParticipants.find((p) => p.socketId === remoteSocketId)?.user || null;
+      useCallStore.getState().addRemoteStream(remoteSocketId, newStream, pUser);
+    };
+
+    // Send ICE candidates to the remote peer
+    pc.onicecandidate = (event) => {
+      if (event.candidate && socket) {
+        socket.emit('webrtc_ice_candidate', {
+          targetSocketId: remoteSocketId,
+          candidate: event.candidate,
+          roomId,
+        });
+      }
+    };
+
+    // Log ICE connection state changes
+    pc.oniceconnectionstatechange = () => {
+      console.log(`ICE state [${remoteSocketId}]:`, pc.iceConnectionState);
+    };
+
+    // Clean up on disconnect/failure
+    pc.onconnectionstatechange = () => {
+      console.log(`Connection state [${remoteSocketId}]:`, pc.connectionState);
+      if (['disconnected', 'failed', 'closed'].includes(pc.connectionState)) {
+        useCallStore.getState().removeRemoteStream(remoteSocketId);
+        useCallStore.getState().removeParticipant(remoteSocketId);
+      }
+    };
+
+    useCallStore.getState().addPeerConnection(remoteSocketId, pc);
+
+    // Drain any ICE candidates that arrived before this PC was created
+    if (globalIceQueue[remoteSocketId]?.length > 0) {
+      pc.iceQueue = [...globalIceQueue[remoteSocketId]];
+      delete globalIceQueue[remoteSocketId];
+    }
+
+    return pc;
+  }, []);
+
+  // ─── Flush queued ICE candidates after remote description is set ─────────
+  const flushIceQueue = useCallback(async (pc) => {
+    if (pc.iceQueue?.length > 0) {
+      for (const candidate of pc.iceQueue) {
+        try {
+          await pc.addIceCandidate(new RTCIceCandidate(candidate));
+        } catch (e) {
+          console.warn('Queued ICE candidate error:', e.message);
+        }
+      }
+      pc.iceQueue = [];
+    }
+  }, []);
+
+  // ─── Initiate a connection (send offer) ──────────────────────────────────
+  const connectToPeer = useCallback(async (remoteSocketId, localStream, roomId, user) => {
+    const socket = getSocket();
+    // Don't create duplicate connections
+    const { peerConnections } = useCallStore.getState();
+    if (peerConnections[remoteSocketId]) {
+      console.log('Peer connection already exists for', remoteSocketId);
+      return peerConnections[remoteSocketId];
+    }
+
+    useCallStore.getState().addParticipant({
+      socketId: remoteSocketId,
+      user,
+      videoEnabled: true,
+      audioEnabled: true,
+    });
+
+    const pc = createPeerConnection(remoteSocketId, localStream, roomId);
+
+    try {
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
       socket?.emit('webrtc_offer', { targetSocketId: remoteSocketId, offer, roomId });
-      return pc;
-    },
-    [socket, createPeerConnection, addParticipant]
-  );
+    } catch (err) {
+      console.error('Error creating offer:', err);
+    }
 
-  // Handle incoming offer
-  const handleOffer = useCallback(
-    async ({ offer, fromSocketId, fromUser, roomId }, localStream) => {
-      addParticipant({ socketId: fromSocketId, user: fromUser, videoEnabled: true, audioEnabled: true });
-      const pc = createPeerConnection(fromSocketId, localStream, roomId);
+    return pc;
+  }, [createPeerConnection]);
+
+  // ─── Handle incoming offer (send answer) ─────────────────────────────────
+  const handleOffer = useCallback(async ({ offer, fromSocketId, fromUser, roomId }, localStream) => {
+    const socket = getSocket();
+    // Don't handle duplicate offers
+    const { peerConnections } = useCallStore.getState();
+    if (peerConnections[fromSocketId]) {
+      console.log('Already have peer connection for', fromSocketId, '— ignoring offer');
+      return;
+    }
+
+    useCallStore.getState().addParticipant({
+      socketId: fromSocketId,
+      user: fromUser,
+      videoEnabled: true,
+      audioEnabled: true,
+    });
+
+    const pc = createPeerConnection(fromSocketId, localStream, roomId);
+
+    try {
       await pc.setRemoteDescription(new RTCSessionDescription(offer));
-      
-      // Process queued candidates
-      if (pc.iceQueue) {
-        for (const candidate of pc.iceQueue) {
-          await pc.addIceCandidate(new RTCIceCandidate(candidate)).catch(e => console.error('Delayed ICE error:', e));
-        }
-        pc.iceQueue = [];
-      }
+      await flushIceQueue(pc);
 
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
       socket?.emit('webrtc_answer', { targetSocketId: fromSocketId, answer, roomId });
-      addParticipant({ socketId: fromSocketId, user: fromUser, videoEnabled: true, audioEnabled: true });
-      return pc;
-    },
-    [socket, createPeerConnection, addParticipant]
-  );
+    } catch (err) {
+      console.error('Error handling offer:', err);
+    }
+  }, [createPeerConnection, flushIceQueue]);
 
-  // Handle incoming answer
-  const handleAnswer = useCallback(
-    async ({ answer, fromSocketId }) => {
-      const { peerConnections } = useCallStore.getState();
-      const pc = peerConnections[fromSocketId];
-      if (pc && pc.signalingState !== 'stable') {
-        await pc.setRemoteDescription(new RTCSessionDescription(answer));
-        
-        // Process queued candidates
-        if (pc.iceQueue) {
-          for (const candidate of pc.iceQueue) {
-            await pc.addIceCandidate(new RTCIceCandidate(candidate)).catch(e => console.error('Delayed ICE error:', e));
-          }
-          pc.iceQueue = [];
-        }
+  // ─── Handle incoming answer ───────────────────────────────────────────────
+  const handleAnswer = useCallback(async ({ answer, fromSocketId }) => {
+    const { peerConnections } = useCallStore.getState();
+    const pc = peerConnections[fromSocketId];
+
+    if (!pc) {
+      console.warn('No peer connection found for answer from', fromSocketId);
+      return;
+    }
+
+    if (pc.signalingState === 'stable') {
+      console.warn('PC already stable, ignoring answer from', fromSocketId);
+      return;
+    }
+
+    try {
+      await pc.setRemoteDescription(new RTCSessionDescription(answer));
+      await flushIceQueue(pc);
+    } catch (err) {
+      console.error('Error handling answer:', err);
+    }
+  }, [flushIceQueue]);
+
+  // ─── Handle incoming ICE candidate ───────────────────────────────────────
+  const handleIceCandidate = useCallback(async ({ candidate, fromSocketId }) => {
+    if (!candidate) return;
+
+    const { peerConnections } = useCallStore.getState();
+    const pc = peerConnections[fromSocketId];
+
+    if (!pc) {
+      // PC not created yet — queue it globally
+      globalIceQueue[fromSocketId] = globalIceQueue[fromSocketId] || [];
+      globalIceQueue[fromSocketId].push(candidate);
+      return;
+    }
+
+    try {
+      if (pc.remoteDescription?.type) {
+        await pc.addIceCandidate(new RTCIceCandidate(candidate));
+      } else {
+        // Remote description not set yet — queue on the PC
+        pc.iceQueue = pc.iceQueue || [];
+        pc.iceQueue.push(candidate);
       }
-    },
-    []
-  );
+    } catch (err) {
+      console.warn('ICE candidate error:', err.message);
+    }
+  }, []);
 
-  // Handle ICE candidate
-  const handleIceCandidate = useCallback(
-    async ({ candidate, fromSocketId }) => {
-      const { peerConnections } = useCallStore.getState();
-      const pc = peerConnections[fromSocketId];
-      if (pc && candidate) {
-        try {
-          if (pc.remoteDescription) {
-            await pc.addIceCandidate(new RTCIceCandidate(candidate));
-          } else {
-            pc.iceQueue = pc.iceQueue || [];
-            pc.iceQueue.push(candidate);
-          }
-        } catch (err) {
-          console.error('Error adding ICE candidate:', err);
-        }
-      } else if (!pc && candidate) {
-        // PC not created yet, queue it globally
-        globalIceQueue.current[fromSocketId] = globalIceQueue.current[fromSocketId] || [];
-        globalIceQueue.current[fromSocketId].push(candidate);
-      }
-    },
-    []
-  );
+  // ─── Handle a participant leaving ─────────────────────────────────────────
+  const handleParticipantLeft = useCallback(({ socketId }) => {
+    useCallStore.getState().removePeerConnection(socketId);
+    useCallStore.getState().removeRemoteStream(socketId);
+    useCallStore.getState().removeParticipant(socketId);
+    // Clean up global ICE queue for this peer
+    delete globalIceQueue[socketId];
+  }, []);
 
-  // Handle participant leaving
-  const handleParticipantLeft = useCallback(
-    ({ socketId }) => {
-      removePeerConnection(socketId);
-      removeRemoteStream(socketId);
-      removeParticipant(socketId);
-    },
-    [removePeerConnection, removeRemoteStream, removeParticipant]
-  );
-
-  // Clean up all connections
+  // ─── Full cleanup ─────────────────────────────────────────────────────────
   const cleanup = useCallback(() => {
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach((t) => t.stop());
       localStreamRef.current = null;
     }
+    // Clear global ICE queue
+    Object.keys(globalIceQueue).forEach((k) => delete globalIceQueue[k]);
   }, []);
 
   return {

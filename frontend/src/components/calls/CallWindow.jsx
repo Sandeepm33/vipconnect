@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import useCallStore from '@/store/callStore';
 import useWebRTC from '@/hooks/useWebRTC';
 import useAuthStore from '@/store/authStore';
@@ -12,7 +12,6 @@ export default function CallWindow() {
     isAudioEnabled,
     localStream,
     remoteStreams,
-    callParticipants,
     toggleVideo,
     toggleAudio,
     endCall,
@@ -28,92 +27,104 @@ export default function CallWindow() {
     handleAnswer,
     handleIceCandidate,
     handleParticipantLeft,
-    cleanup,
   } = useWebRTC();
 
   const localVideoRef = useRef(null);
   const [callDuration, setCallDuration] = useState(0);
   const durationRef = useRef(null);
-  const socket = getSocket();
+  // Keep a ref to activeCall so socket handlers always see fresh data
+  const activeCallRef = useRef(activeCall);
+  useEffect(() => { activeCallRef.current = activeCall; }, [activeCall]);
 
+  // ─── Start call: get media and connect to any pre-existing participants ───
   useEffect(() => {
-    if (!activeCall) return;
-    startCall();
-    durationRef.current = setInterval(() => setCallDuration((d) => d + 1), 1000);
+    if (!activeCall?.roomId) return;
+
+    let cancelled = false;
+
+    const initCall = async () => {
+      const isVideo = activeCall.type === 'video';
+      let stream = useCallStore.getState().localStream;
+
+      if (!stream) {
+        stream = await getLocalStream(isVideo, true);
+      }
+      if (!stream || cancelled) return;
+
+      // Start duration timer
+      durationRef.current = setInterval(() => setCallDuration((d) => d + 1), 1000);
+
+      // Connect to participants already in the room (e.g. callee sees existing members)
+      const { callParticipants, peerConnections } = useCallStore.getState();
+      for (const p of callParticipants) {
+        if (!peerConnections[p.socketId] && !cancelled) {
+          await connectToPeer(p.socketId, stream, activeCall.roomId, p.user);
+        }
+      }
+
+      // Process any offers that arrived before camera was ready
+      const { pendingOffers } = useCallStore.getState();
+      if (pendingOffers.length > 0) {
+        const offers = [...pendingOffers];
+        useCallStore.getState().clearPendingOffers();
+        for (const data of offers) {
+          if (!cancelled) await handleOffer(data, stream);
+        }
+      }
+    };
+
+    initCall();
 
     return () => {
+      cancelled = true;
       clearInterval(durationRef.current);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeCall?.roomId]);
 
-  // Attach local stream to video element
+  // ─── Attach local stream to <video> element ──────────────────────────────
   useEffect(() => {
     if (localStream && localVideoRef.current) {
       localVideoRef.current.srcObject = localStream;
     }
   }, [localStream]);
 
-  const startCall = async () => {
-    const isVideo = activeCall?.type === 'video';
-    let stream = localStream;
-    if (!stream) {
-      stream = await getLocalStream(isVideo, true);
-    }
-    if (!stream) return; // Aborted due to unmount
-
-    // Connect to any participants that are already in the store (e.g. from call_participants)
-    const { callParticipants, peerConnections } = useCallStore.getState();
-    for (const p of callParticipants) {
-      if (!peerConnections[p.socketId]) {
-        await connectToPeer(p.socketId, stream, activeCall?.roomId, p.user);
-      }
-    }
-
-    // Process any offers that arrived while we were getting camera permissions
-    const { pendingOffers, clearPendingOffers } = useCallStore.getState();
-    if (pendingOffers.length > 0) {
-      for (const data of pendingOffers) {
-        await handleOffer(data, stream);
-      }
-      clearPendingOffers();
-    }
-  };
-
-  // WebRTC socket event listeners
+  // ─── Socket event handlers ────────────────────────────────────────────────
   useEffect(() => {
+    const socket = getSocket();
     if (!socket) return;
 
+    // Existing participants when we (callee) join the room
     const onCallParticipants = async ({ participants }) => {
       setCallParticipants(participants);
       const stream = useCallStore.getState().localStream;
-      if (stream) {
-        const { peerConnections } = useCallStore.getState();
-        for (const p of participants) {
-          if (!peerConnections[p.socketId]) {
-            await connectToPeer(p.socketId, stream, activeCall?.roomId, p.user);
-          }
+      if (!stream) return; // startCall hasn't gotten media yet; it will handle these
+      const { peerConnections } = useCallStore.getState();
+      for (const p of participants) {
+        if (!peerConnections[p.socketId]) {
+          await connectToPeer(p.socketId, stream, activeCallRef.current?.roomId, p.user);
         }
       }
     };
 
+    // A new participant joined → existing participants send them an offer
     const onParticipantJoined = async ({ socketId, user: pUser }) => {
       addParticipant({ socketId, user: pUser, videoEnabled: true, audioEnabled: true });
-      // The existing participant must initiate the WebRTC offer to the new joiner
       const stream = useCallStore.getState().localStream;
-      if (stream) {
-        const { peerConnections } = useCallStore.getState();
-        if (!peerConnections[socketId]) {
-          await connectToPeer(socketId, stream, activeCall?.roomId, pUser);
-        }
+      if (!stream) return;
+      const { peerConnections } = useCallStore.getState();
+      if (!peerConnections[socketId]) {
+        await connectToPeer(socketId, stream, activeCallRef.current?.roomId, pUser);
       }
     };
 
+    // Incoming WebRTC offer
     const onWebRTCOffer = async (data) => {
       const stream = useCallStore.getState().localStream;
       if (stream) {
         await handleOffer(data, stream);
       } else {
+        // Media not ready yet — queue the offer, startCall will process it
         useCallStore.getState().addPendingOffer(data);
       }
     };
@@ -121,10 +132,7 @@ export default function CallWindow() {
     const onWebRTCAnswer = (data) => handleAnswer(data);
     const onWebRTCIce = (data) => handleIceCandidate(data);
     const onParticipantLeft = (data) => handleParticipantLeft(data);
-
-    const onCallEnded = () => {
-      endCall();
-    };
+    const onCallEnded = () => endCall();
 
     socket.on('call_participants', onCallParticipants);
     socket.on('participant_joined', onParticipantJoined);
@@ -145,33 +153,38 @@ export default function CallWindow() {
       socket.off('call_ended', onCallEnded);
       socket.off('call_rejected', onCallEnded);
     };
-  }, [socket]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Mount once — handlers always read fresh state via useCallStore.getState()
 
-  const handleEndCall = () => {
+  // ─── Controls ─────────────────────────────────────────────────────────────
+  const handleEndCall = useCallback(() => {
+    const socket = getSocket();
     socket?.emit('call_end', {
-      callId: activeCall?.callId,
-      roomId: activeCall?.roomId,
+      callId: activeCallRef.current?.callId,
+      roomId: activeCallRef.current?.roomId,
     });
     endCall();
-  };
+  }, [endCall]);
 
-  const handleToggleVideo = () => {
+  const handleToggleVideo = useCallback(() => {
+    const socket = getSocket();
     toggleVideo();
     socket?.emit('media_state_change', {
-      roomId: activeCall?.roomId,
+      roomId: activeCallRef.current?.roomId,
       video: !isVideoEnabled,
       audio: isAudioEnabled,
     });
-  };
+  }, [toggleVideo, isVideoEnabled, isAudioEnabled]);
 
-  const handleToggleAudio = () => {
+  const handleToggleAudio = useCallback(() => {
+    const socket = getSocket();
     toggleAudio();
     socket?.emit('media_state_change', {
-      roomId: activeCall?.roomId,
+      roomId: activeCallRef.current?.roomId,
       video: isVideoEnabled,
       audio: !isAudioEnabled,
     });
-  };
+  }, [toggleAudio, isVideoEnabled, isAudioEnabled]);
 
   const formatDuration = (seconds) => {
     const m = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -179,33 +192,27 @@ export default function CallWindow() {
     return `${m}:${s}`;
   };
 
+  // ─── Display helpers ──────────────────────────────────────────────────────
   const remoteStreamEntries = Object.entries(remoteStreams);
   const isGroup = activeCall?.isGroup;
   const isVideo = activeCall?.type === 'video';
   const isInitiator = activeCall?.initiator?._id === user?._id;
 
   const otherMember = !isGroup && activeCall?.chat?.members
-    ? activeCall.chat.members.find(m => String(m._id) !== String(user?._id))
+    ? activeCall.chat.members.find((m) => String(m._id) !== String(user?._id))
     : null;
 
   const remoteUser = otherMember || (!isInitiator ? activeCall?.initiator : null);
+  const displayName = isGroup ? activeCall?.chat?.name : (remoteUser?.name || 'Unknown');
+  const displayAvatar = isGroup ? activeCall?.chat?.groupPicture?.url : remoteUser?.avatar?.url;
 
-  const displayName = isGroup 
-    ? activeCall?.chat?.name 
-    : (remoteUser?.name || 'Unknown');
-    
-  const displayAvatar = isGroup
-    ? activeCall?.chat?.groupPicture?.url
-    : remoteUser?.avatar?.url;
-
+  // ─── Render ───────────────────────────────────────────────────────────────
   return (
     <div className="fixed inset-0 bg-black/95 z-[200] flex flex-col">
-      {/* Call header */}
+      {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 bg-black/50 backdrop-blur-sm border-b border-white/10">
         <div>
-          <h2 className="text-white font-semibold">
-            {displayName}
-          </h2>
+          <h2 className="text-white font-semibold">{displayName}</h2>
           <p className="text-primary-400 text-sm">
             {callDuration > 0 ? formatDuration(callDuration) : 'Connecting...'}
           </p>
@@ -219,21 +226,24 @@ export default function CallWindow() {
         </div>
       </div>
 
-      {/* Video grid */}
+      {/* Video / Audio content */}
       <div className="flex-1 overflow-hidden relative">
         {isVideo ? (
-          <div className={`h-full grid gap-2 p-3 ${
-            remoteStreamEntries.length === 0 ? 'grid-cols-1' :
-            remoteStreamEntries.length === 1 ? 'grid-cols-1' :
-            remoteStreamEntries.length <= 3 ? 'grid-cols-2' :
-            'grid-cols-2 sm:grid-cols-3'
-          }`}>
-            {/* Remote videos */}
+          <div
+            className={`h-full grid gap-2 p-3 ${
+              remoteStreamEntries.length === 0
+                ? 'grid-cols-1'
+                : remoteStreamEntries.length === 1
+                ? 'grid-cols-1'
+                : remoteStreamEntries.length <= 3
+                ? 'grid-cols-2'
+                : 'grid-cols-2 sm:grid-cols-3'
+            }`}
+          >
             {remoteStreamEntries.map(([socketId, { stream, user: pUser }]) => (
-              <RemoteVideo key={socketId} stream={stream} user={pUser} socketId={socketId} />
+              <RemoteVideo key={socketId} stream={stream} user={pUser} />
             ))}
 
-            {/* No remote streams yet */}
             {remoteStreamEntries.length === 0 && (
               <div className="flex items-center justify-center rounded-2xl bg-dark-700">
                 <div className="text-center">
@@ -256,8 +266,14 @@ export default function CallWindow() {
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <div className="relative w-36 h-36 mx-auto mb-6">
-                <div className="absolute inset-0 rounded-full bg-primary-500/20 animate-ping" style={{ animationDuration: '2s' }} />
-                <div className="absolute inset-2 rounded-full bg-primary-500/20 animate-ping" style={{ animationDuration: '2s', animationDelay: '0.3s' }} />
+                <div
+                  className="absolute inset-0 rounded-full bg-primary-500/20 animate-ping"
+                  style={{ animationDuration: '2s' }}
+                />
+                <div
+                  className="absolute inset-2 rounded-full bg-primary-500/20 animate-ping"
+                  style={{ animationDuration: '2s', animationDelay: '0.3s' }}
+                />
                 <div className="relative w-full h-full rounded-full overflow-hidden bg-dark-600 flex items-center justify-center">
                   {displayAvatar ? (
                     <img src={displayAvatar} alt="" className="w-full h-full object-cover" />
@@ -268,7 +284,11 @@ export default function CallWindow() {
                   )}
                 </div>
               </div>
-              <p className="text-gray-400 text-sm">Voice call in progress</p>
+              <p className="text-white font-semibold text-lg mb-1">{displayName}</p>
+              <p className="text-gray-400 text-sm">
+                {remoteStreamEntries.length > 0 ? 'Connected' : 'Calling...'}
+              </p>
+              {/* Hidden audio elements for remote streams */}
               {remoteStreamEntries.map(([socketId, { stream }]) => (
                 <AudioOnly key={socketId} stream={stream} />
               ))}
@@ -276,7 +296,7 @@ export default function CallWindow() {
           </div>
         )}
 
-        {/* Local video (picture-in-picture) */}
+        {/* Local video PiP */}
         {isVideo && (
           <div className="absolute bottom-4 right-4 w-32 h-44 rounded-2xl overflow-hidden bg-dark-700 shadow-xl border border-white/10">
             <video
@@ -284,7 +304,7 @@ export default function CallWindow() {
               autoPlay
               muted
               playsInline
-              className="w-full h-full object-cover mirror"
+              className="w-full h-full object-cover"
               style={{ transform: 'scaleX(-1)' }}
             />
             {!isVideoEnabled && (
@@ -294,19 +314,22 @@ export default function CallWindow() {
                 </span>
               </div>
             )}
-            <p className="absolute bottom-1 left-0 right-0 text-center text-[10px] text-gray-400">You</p>
+            <p className="absolute bottom-1 left-0 right-0 text-center text-[10px] text-gray-400">
+              You
+            </p>
           </div>
         )}
       </div>
 
       {/* Controls */}
       <div className="flex items-center justify-center gap-4 py-6 bg-black/50 backdrop-blur-sm border-t border-white/10">
-        {/* Mute */}
+        {/* Mute / Unmute */}
         <CallButton
           id="toggle-audio-btn"
           active={!isAudioEnabled}
           activeColor="bg-red-500"
           onClick={handleToggleAudio}
+          label={isAudioEnabled ? 'Mute' : 'Unmute'}
           icon={
             isAudioEnabled ? (
               <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
@@ -318,16 +341,16 @@ export default function CallWindow() {
               </svg>
             )
           }
-          label={isAudioEnabled ? 'Mute' : 'Unmute'}
         />
 
-        {/* Video toggle */}
+        {/* Camera On / Off (video calls only) */}
         {isVideo && (
           <CallButton
             id="toggle-video-btn"
             active={!isVideoEnabled}
             activeColor="bg-red-500"
             onClick={handleToggleVideo}
+            label={isVideoEnabled ? 'Camera Off' : 'Camera On'}
             icon={
               isVideoEnabled ? (
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -339,28 +362,29 @@ export default function CallWindow() {
                 </svg>
               )
             }
-            label={isVideoEnabled ? 'Camera Off' : 'Camera On'}
           />
         )}
 
-        {/* End call */}
+        {/* End Call */}
         <CallButton
           id="end-call-btn"
-          active={true}
+          active
           activeColor="bg-red-500"
           onClick={handleEndCall}
+          label="End"
+          large
           icon={
             <svg className="w-7 h-7 rotate-[135deg]" fill="currentColor" viewBox="0 0 24 24">
               <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
             </svg>
           }
-          label="End"
-          large
         />
       </div>
     </div>
   );
 }
+
+// ─── Sub-components ──────────────────────────────────────────────────────────
 
 function CallButton({ id, active, activeColor, onClick, icon, label, large }) {
   return (
@@ -379,18 +403,15 @@ function CallButton({ id, active, activeColor, onClick, icon, label, large }) {
   );
 }
 
-function RemoteVideo({ stream, user: pUser, socketId }) {
+function RemoteVideo({ stream, user: pUser }) {
   const videoRef = useRef(null);
 
   useEffect(() => {
-    const videoObj = videoRef.current;
-    if (videoObj && stream) {
-      // Always forcefully re-assign to ensure the video element picks up track changes
-      videoObj.srcObject = null;
-      videoObj.srcObject = stream;
-      
-      // Ensure the video plays
-      videoObj.play().catch(e => console.log('RemoteVideo play error:', e));
+    const el = videoRef.current;
+    if (el && stream) {
+      el.srcObject = null;
+      el.srcObject = stream;
+      el.play().catch((e) => console.warn('RemoteVideo play error:', e.message));
     }
   }, [stream]);
 
@@ -411,11 +432,14 @@ function RemoteVideo({ stream, user: pUser, socketId }) {
 
 function AudioOnly({ stream }) {
   const audioRef = useRef(null);
+
   useEffect(() => {
-    if (audioRef.current && stream) {
-      audioRef.current.srcObject = stream;
-      audioRef.current.play().catch(e => console.log('Audio play error:', e));
+    const el = audioRef.current;
+    if (el && stream) {
+      el.srcObject = stream;
+      el.play().catch((e) => console.warn('Audio play error:', e.message));
     }
   }, [stream]);
+
   return <audio ref={audioRef} autoPlay playsInline />;
 }

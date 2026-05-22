@@ -101,15 +101,18 @@ const callHandlers = (io, socket, onlineUsers) => {
       }
 
       // Get existing participants in the room (for WebRTC mesh)
+      // Shape must match what frontend expects: { socketId, user: { _id, name, avatar } }
       const existingParticipants = [];
       const roomSockets = await io.in(`call:${roomId}`).fetchSockets();
       roomSockets.forEach((s) => {
         if (s.id !== socket.id && s.user) {
           existingParticipants.push({
             socketId: s.id,
-            userId: s.user._id,
-            name: s.user.name,
-            avatar: s.user.avatar,
+            user: {
+              _id: s.user._id,
+              name: s.user.name,
+              avatar: s.user.avatar,
+            },
           });
         }
       });
