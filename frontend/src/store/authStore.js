@@ -58,8 +58,13 @@ const useAuthStore = create(
           const data = await api.get('/auth/me');
           set({ user: data.user, isAuthenticated: true });
           if (!get().token) set({ token });
-        } catch {
-          set({ user: null, token: null, isAuthenticated: false });
+        } catch (err) {
+          // Only clear auth state on a real auth failure (401), not network errors
+          if (err.message?.includes('authorized') || err.message?.includes('not found') || err.message?.includes('invalid')) {
+            localStorage.removeItem('vipconnect_token');
+            set({ user: null, token: null, isAuthenticated: false });
+          }
+          // Otherwise keep existing state so a temporary network error doesn't log out the user
         }
       },
 

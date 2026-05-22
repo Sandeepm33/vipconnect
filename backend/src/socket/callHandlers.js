@@ -74,16 +74,22 @@ const callHandlers = (io, socket, onlineUsers) => {
   // Accept call
   socket.on('call_accept', async ({ callId, roomId }) => {
     try {
-      const call = await Call.findByIdAndUpdate(
-        callId,
-        {
-          $set: { status: 'ongoing', startedAt: new Date() },
-          $push: { participants: { user: socket.user._id, status: 'accepted', joinedAt: new Date() } },
-        },
-        { new: true }
+      // Update call status and add participant only if not already added
+      const call = await Call.findById(callId);
+      if (!call) return;
+
+      const alreadyIn = call.participants.some(
+        (p) => p.user.toString() === socket.user._id.toString()
       );
 
-      if (!call) return;
+      const updateQuery = {
+        $set: { status: 'ongoing', startedAt: call.startedAt || new Date() },
+      };
+      if (!alreadyIn) {
+        updateQuery.$push = { participants: { user: socket.user._id, status: 'accepted', joinedAt: new Date() } };
+      }
+
+      await Call.findByIdAndUpdate(callId, updateQuery, { new: true });
 
       socket.join(`call:${roomId}`);
 

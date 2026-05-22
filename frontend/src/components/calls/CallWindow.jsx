@@ -44,7 +44,8 @@ export default function CallWindow() {
     return () => {
       clearInterval(durationRef.current);
     };
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeCall?.roomId]);
 
   // Attach local stream to video element
   useEffect(() => {
@@ -96,8 +97,16 @@ export default function CallWindow() {
       }
     };
 
-    const onParticipantJoined = ({ socketId, user: pUser }) => {
+    const onParticipantJoined = async ({ socketId, user: pUser }) => {
       addParticipant({ socketId, user: pUser, videoEnabled: true, audioEnabled: true });
+      // The existing participant must initiate the WebRTC offer to the new joiner
+      const stream = useCallStore.getState().localStream;
+      if (stream) {
+        const { peerConnections } = useCallStore.getState();
+        if (!peerConnections[socketId]) {
+          await connectToPeer(socketId, stream, activeCall?.roomId, pUser);
+        }
+      }
     };
 
     const onWebRTCOffer = async (data) => {

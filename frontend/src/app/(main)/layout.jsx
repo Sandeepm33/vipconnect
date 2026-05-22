@@ -35,9 +35,13 @@ export default function MainLayout({ children }) {
       fetchMe();
       fetchChats();
     }
-  }, [isAuthenticated, token]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
 
-  if (!isAuthenticated) return null;
+  // Don't block render if we have a token in localStorage (handles Zustand persist hydration delay)
+  // This prevents the avatar from disappearing while the store is rehydrating
+  const hasLocalToken = typeof window !== 'undefined' && !!localStorage.getItem('vipconnect_token');
+  if (!isAuthenticated && !hasLocalToken) return null;
 
   const isChatRoute = pathname.startsWith('/chat/');
 
