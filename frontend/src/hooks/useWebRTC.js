@@ -24,18 +24,64 @@ const useWebRTC = () => {
       const { localStream } = useCallStore.getState();
       if (localStream) return localStream;
 
-      const stream = await navigator.mediaDevices.getUserMedia({ video, audio });
+      // Check if browser context is secure (getUserMedia requires localhost or HTTPS)
+      if (typeof window !== 'undefined' && !window.isSecureContext) {
+        toast.error(
+          'Media access is blocked in non-secure HTTP contexts. Please use HTTPS or localhost to enable camera/microphone.',
+          { duration: 8000 }
+        );
+        return null;
+      }
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        toast.error('Media devices are not supported or are blocked by browser settings.');
+        return null;
+      }
+
+      let stream = null;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video, audio });
+      } catch (firstErr) {
+        console.warn('Initial getUserMedia failed, trying fallback...', firstErr);
+
+        // If permission was explicitly denied, do not fallback/retry
+        if (firstErr.name === 'NotAllowedError') {
+          throw firstErr;
+        }
+
+        // Try fallback options if we requested both
+        if (video && audio) {
+          try {
+            // Fallback 1: Try audio only
+            stream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+            toast('No camera found, using microphone only', { icon: '🎙️' });
+            useCallStore.setState({ isVideoEnabled: false });
+          } catch (audioErr) {
+            try {
+              // Fallback 2: Try video only
+              stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+              toast('No microphone found, using camera only', { icon: '📷' });
+              useCallStore.setState({ isAudioEnabled: false });
+            } catch (videoErr) {
+              throw firstErr; // Propagate the original error if both failed
+            }
+          }
+        } else {
+          throw firstErr;
+        }
+      }
+
       localStreamRef.current = stream;
       useCallStore.getState().setLocalStream(stream);
       return stream;
     } catch (err) {
       console.error('getUserMedia error:', err);
       if (err.name === 'NotAllowedError') {
-        toast.error('Camera/microphone access denied. Please allow permissions.');
+        toast.error('Camera/microphone access denied. Please click the site settings icon in your browser URL bar to allow permissions.', { duration: 6000 });
       } else if (err.name === 'NotFoundError') {
-        toast.error('No camera/microphone found.');
+        toast.error('No camera or microphone hardware found on this device.');
       } else {
-        toast.error('Could not access camera/microphone');
+        toast.error(`Could not access camera/microphone: ${err.message || 'Unknown error'}`);
       }
       return null;
     }

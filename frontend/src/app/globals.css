@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -12,16 +12,17 @@
 html, body {
   min-height: 100vh;
   font-family: 'Inter', system-ui, sans-serif;
-  background-color: #0d1117;
+  background-color: #080c14;
   color: #e2e8f0;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #__next, main {
   height: 100%;
 }
 
-/* Custom scrollbar */
+/* ── Custom scrollbar ── */
 ::-webkit-scrollbar {
   width: 4px;
   height: 4px;
@@ -30,140 +31,228 @@ html, body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #2d3748;
-  border-radius: 2px;
+  background: rgba(124, 58, 237, 0.25);
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #4a5568;
+  background: rgba(124, 58, 237, 0.45);
 }
+
+/* ── Keyframes ─────────────────────────────────────────────── */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes messageSlideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes bounceDot {
+  0%, 80%, 100% { transform: translateY(0);    opacity: 0.4; }
+  40%           { transform: translateY(-6px); opacity: 1;   }
+}
+
+@keyframes callPulse {
+  0%   { transform: scale(1);   opacity: 0.8; }
+  100% { transform: scale(1.5); opacity: 0;   }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes pulseSoft {
+  0%, 100% { opacity: 1;   transform: scale(1); }
+  50%       { opacity: 0.7; transform: scale(0.97); }
+}
+
+@keyframes gradient-x {
+  0%, 100% { background-position: 0% 50%; }
+  50%       { background-position: 100% 50%; }
+}
+
+/* ── Utility animation classes ─────────────────────────────── */
+
+.animate-scale-in      { animation: scaleIn      0.35s cubic-bezier(0.34,1.56,0.64,1) both; }
+.animate-fadeInUp      { animation: fadeInUp     0.5s  ease both; }
+.animate-slideDown     { animation: slideDown    0.35s ease both; }
+.animate-bounce-dot    { animation: bounceDot    1.4s  ease-in-out infinite; }
+.animate-spin          { animation: spin         0.8s  linear infinite; }
+.animate-pulse-soft    { animation: pulseSoft    2s    ease-in-out infinite; }
+
+/* ── Component layer ───────────────────────────────────────── */
 
 @layer components {
+
+  /* Glassmorphism base */
   .glass {
-    @apply bg-white/5 backdrop-blur-md border border-white/10;
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
   }
 
+  /* Premium glass card used by modals */
+  .glass-card {
+    background: rgba(10, 14, 24, 0.85);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.03);
+  }
+
+  /* Primary action button */
   .btn-primary {
-    @apply bg-primary-500 hover:bg-primary-600 text-white font-semibold px-6 py-2.5 rounded-xl
+    @apply bg-violet-600 hover:bg-violet-500 text-white font-semibold px-6 py-2.5 rounded-xl
            transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+    box-shadow: 0 4px 20px rgba(124, 58, 237, 0.35);
+  }
+  .btn-primary:hover {
+    box-shadow: 0 4px 28px rgba(124, 58, 237, 0.55);
   }
 
+  /* Ghost button */
   .btn-ghost {
-    @apply bg-transparent hover:bg-white/10 text-gray-300 hover:text-white px-4 py-2 rounded-xl
+    @apply bg-transparent text-gray-300 hover:text-white px-4 py-2 rounded-xl
            transition-all duration-200 active:scale-95;
+    background: rgba(255, 255, 255, 0);
+  }
+  .btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.06);
   }
 
+  /* Form input field */
   .input-field {
-    @apply w-full bg-chat-input border border-chat-border rounded-xl px-4 py-3
-           text-gray-200 placeholder-gray-500 outline-none
-           focus:border-primary-500 focus:ring-1 focus:ring-primary-500/30
-           transition-all duration-200;
+    @apply w-full rounded-xl px-4 py-3 text-gray-200 outline-none transition-all duration-200;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: white;
+  }
+  .input-field::placeholder { color: rgba(107, 114, 128, 0.7); }
+  .input-field:focus {
+    border-color: rgba(124, 58, 237, 0.65);
+    background: rgba(124, 58, 237, 0.05);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
   }
 
+  /* Chat bubbles */
   .chat-bubble-out {
-    @apply bg-primary-900/80 border border-primary-800/40 text-gray-100 rounded-2xl rounded-br-sm
-           px-4 py-2 max-w-xs lg:max-w-md shadow-lg;
+    @apply text-gray-100 rounded-2xl rounded-br-sm px-4 py-2 max-w-xs lg:max-w-md shadow-lg;
+    background: linear-gradient(135deg, #7c3aed, #6d28d9);
+    border: 1px solid rgba(124, 58, 237, 0.4);
   }
-
   .chat-bubble-in {
-    @apply bg-chat-bubble_in border border-white/5 text-gray-100 rounded-2xl rounded-bl-sm
-           px-4 py-2 max-w-xs lg:max-w-md shadow-lg;
+    @apply text-gray-100 rounded-2xl rounded-bl-sm px-4 py-2 max-w-xs lg:max-w-md shadow-lg;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.07);
   }
 
+  /* Sidebar list item */
   .sidebar-item {
-    @apply flex items-center gap-3 px-4 py-3.5 cursor-pointer
-           transition-all duration-150;
+    @apply flex items-center gap-3 px-4 py-3.5 cursor-pointer transition-all duration-150;
   }
-
   .sidebar-item.active {
-    @apply bg-primary-500/10 border-l-[3px] border-primary-500;
+    background: rgba(124, 58, 237, 0.1);
+    border-left: 3px solid #7c3aed;
   }
 
-  .avatar {
-    @apply rounded-full object-cover bg-dark-600 flex-shrink-0;
-  }
-
+  /* Typing indicator dots */
   .typing-dot {
-    @apply w-2 h-2 bg-primary-400 rounded-full animate-bounce-dot;
+    @apply w-2 h-2 rounded-full;
+    background: rgba(124, 58, 237, 0.8);
+    animation: bounceDot 1.4s ease-in-out infinite;
   }
 
+  /* Online presence dot */
   .online-dot {
-    @apply absolute bottom-0 right-0 w-3 h-3 bg-primary-500 rounded-full border-2 border-chat-sidebar;
+    @apply absolute bottom-0 right-0 w-3 h-3 rounded-full border-2;
+    background: #10b981;
+    border-color: #111827;
+    box-shadow: 0 0 6px rgba(16, 185, 129, 0.7);
   }
 
+  /* Modal backdrop + card */
   .modal-overlay {
-    @apply fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4;
+    @apply fixed inset-0 backdrop-blur-sm z-50 flex items-center justify-center p-4;
+    background: rgba(0, 0, 0, 0.65);
+  }
+  .modal-card {
+    @apply rounded-2xl shadow-2xl w-full max-w-md;
+    background: rgba(10, 14, 24, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(24px);
   }
 
-  .modal-card {
-    @apply bg-chat-panel border border-chat-border rounded-2xl shadow-2xl w-full max-w-md;
+  /* Avatar base */
+  .avatar {
+    @apply rounded-full object-cover flex-shrink-0;
+    background: rgba(255, 255, 255, 0.06);
   }
 }
+
+/* ── Utility layer ─────────────────────────────────────────── */
 
 @layer utilities {
   .text-gradient {
-    @apply bg-gradient-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent;
+    background: linear-gradient(135deg, #a78bfa, #38bdf8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: #2d3748 transparent;
+    scrollbar-color: rgba(124, 58, 237, 0.25) transparent;
   }
 
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
 
-  /* Allow hover:bg-white/4 and hover:bg-white/8 */
-  .hover\:bg-white\/4:hover { background-color: rgba(255,255,255,0.04); }
-  .hover\:bg-white\/8:hover { background-color: rgba(255,255,255,0.08); }
-  .bg-white\/4 { background-color: rgba(255,255,255,0.04); }
-  .bg-white\/8 { background-color: rgba(255,255,255,0.08); }
+  /* Fractional opacity hover utilities */
+  .hover\:bg-white\/4:hover  { background-color: rgba(255, 255, 255, 0.04); }
+  .hover\:bg-white\/8:hover  { background-color: rgba(255, 255, 255, 0.08); }
+  .bg-white\/4               { background-color: rgba(255, 255, 255, 0.04); }
+  .bg-white\/8               { background-color: rgba(255, 255, 255, 0.08); }
 }
 
-/* Message animations */
+/* ── Stand-alone animation classes ─────────────────────────── */
+
 .message-enter {
   animation: messageSlideIn 0.25s ease-out forwards;
 }
 
-@keyframes messageSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.page-enter {
+  animation: fadeIn 0.2s ease-out;
 }
 
-/* Call pulse animation */
+/* Pulsing ring for incoming call avatar */
 .call-pulse::before {
   content: '';
   position: absolute;
   inset: -6px;
   border-radius: 50%;
-  border: 2px solid #25D366;
+  border: 2px solid rgba(124, 58, 237, 0.6);
   animation: callPulse 1.5s ease-out infinite;
-}
-
-@keyframes callPulse {
-  0% { transform: scale(1); opacity: 0.8; }
-  100% { transform: scale(1.5); opacity: 0; }
-}
-
-/* Glassmorphism card */
-.glass-card {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
-/* Page transitions */
-.page-enter {
-  animation: fadeIn 0.2s ease-out;
 }
