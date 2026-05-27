@@ -35,6 +35,7 @@ export default function CallWindow() {
   const durationRef = useRef(null);
   const activeCallRef = useRef(activeCall);
   const [facingMode, setFacingMode] = useState('user');
+  const [isCover, setIsCover] = useState(false);
   useEffect(() => { activeCallRef.current = activeCall; }, [activeCall]);
 
   const handleSwitchCamera = useCallback(async () => {
@@ -267,7 +268,7 @@ export default function CallWindow() {
   // ─── Render ───────────────────────────────────────────────────────────────
   return (
     <div
-      className="fixed inset-0 z-[200] flex flex-col overflow-hidden"
+      className="fixed inset-0 z-[200] overflow-hidden bg-black"
       style={{ fontFamily: "'Inter', sans-serif" }}
     >
       <style>{`
@@ -308,16 +309,20 @@ export default function CallWindow() {
                       #060a11;
         }
         .call-header-glass {
-          background: rgba(6,10,17,0.7);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          border-bottom: 1px solid rgba(255,255,255,0.06);
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          background: linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 75%, transparent 100%);
+          z-index: 20;
         }
         .call-controls-glass {
-          background: rgba(6,10,17,0.75);
-          backdrop-filter: blur(24px);
-          -webkit-backdrop-filter: blur(24px);
-          border-top: 1px solid rgba(255,255,255,0.06);
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.2) 75%, transparent 100%);
+          z-index: 20;
         }
         .video-tile {
           background: #0d1220;
@@ -333,15 +338,16 @@ export default function CallWindow() {
         }
         .pip-local {
           position: absolute;
-          bottom: 16px;
+          bottom: 112px;
           right: 16px;
-          width: 120px;
-          height: 160px;
+          width: 160px;
+          height: 112px;
           border-radius: 16px;
           overflow: hidden;
           border: 2px solid rgba(124,58,237,0.5);
           box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(124,58,237,0.2);
           animation: scaleIn 0.4s ease 0.2s both;
+          z-index: 30;
         }
         .ctrl-btn {
           display: flex;
@@ -439,15 +445,18 @@ export default function CallWindow() {
           font-size: 11px;
           font-weight: 600;
           color: white;
+          z-index: 10;
         }
       `}</style>
 
       {/* ── Background ── */}
       <div className="call-bg absolute inset-0" />
 
-      {/* ── Header ── */}
-      <div className="call-header-glass relative z-10 flex items-center justify-between px-6 py-4"
-           style={{ animation: 'slideDown 0.4s ease both' }}>
+      {/* ── Header Overlay ── */}
+      <div
+        className="call-header-glass flex items-center justify-between px-6 py-4"
+        style={{ animation: 'slideDown 0.4s ease both' }}
+      >
         <div className="flex items-center gap-3">
           {/* Avatar */}
           <div className="w-10 h-10 rounded-xl overflow-hidden bg-[#1a2035] flex items-center justify-center flex-shrink-0">
@@ -475,6 +484,28 @@ export default function CallWindow() {
         </div>
 
         <div className="flex items-center gap-2">
+          {isVideo && remoteStreamEntries.length === 1 && (
+            <button
+              onClick={() => setIsCover(!isCover)}
+              className="px-3.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 transition-all text-xs font-semibold text-white border border-white/10 flex items-center gap-1.5"
+            >
+              {isCover ? (
+                <>
+                  <svg className="w-3.5 h-3.5 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" />
+                  </svg>
+                  <span>Fit Screen</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-3.5 h-3.5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 3h6m0 0v6m0-6L14 10M9 21H3m0 0v-6m0 6l7-7" />
+                  </svg>
+                  <span>Fill Screen</span>
+                </>
+              )}
+            </button>
+          )}
           {isGroup && (
             <div className="participant-badge">
               {remoteStreamEntries.length + 1} participants
@@ -501,8 +532,8 @@ export default function CallWindow() {
         </div>
       </div>
 
-      {/* ── Main Content ── */}
-      <div className="flex-1 overflow-hidden relative z-10">
+      {/* ── Main Content (Absolute background video canvas) ── */}
+      <div className="absolute inset-0 z-10 w-full h-full overflow-hidden">
 
         {/* Video Call */}
         {isVideo ? (
@@ -556,12 +587,12 @@ export default function CallWindow() {
               // ─── ONE-ON-ONE STATE: Remote stream covers screen, local floats in PiP ───
               <div className="absolute inset-0 w-full h-full overflow-hidden">
                 {remoteStreamEntries.map(([socketId, { stream, user: pUser }]) => (
-                  <RemoteVideo key={socketId} stream={stream} user={pUser} isFullScreen={true} />
+                  <RemoteVideo key={socketId} stream={stream} user={pUser} isFullScreen={true} isCover={isCover} />
                 ))}
               </div>
             ) : (
               // ─── GROUP STATE: Remote streams arranged in grid, local floats in PiP ───
-              <div className={`h-full grid gap-2 p-3 ${gridClass}`}>
+              <div className={`h-full w-full grid gap-2 pt-24 pb-28 px-4 ${gridClass}`}>
                 {remoteStreamEntries.map(([socketId, { stream, user: pUser }]) => (
                   <RemoteVideo key={socketId} stream={stream} user={pUser} isFullScreen={false} />
                 ))}
@@ -570,8 +601,8 @@ export default function CallWindow() {
           </div>
         ) : (
           /* ── Audio Call UI ── */
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center" style={{ animation: 'fadeInUp 0.5s ease both' }}>
+          <div className="flex items-center justify-center h-full w-full">
+            <div className="text-center animate-fadeInUp">
               <div className="relative w-40 h-40 mx-auto mb-8">
                 <div className="pulse-ring-1" style={{ inset: '-20px' }} />
                 <div className="pulse-ring-2" style={{ inset: '-36px' }} />
@@ -643,9 +674,11 @@ export default function CallWindow() {
         )}
       </div>
 
-      {/* ── Controls Bar ── */}
-      <div className="call-controls-glass relative z-10 flex items-center justify-center gap-5 py-6 px-8"
-           style={{ animation: 'fadeInUp 0.4s ease 0.1s both' }}>
+      {/* ── Controls Bar Overlay ── */}
+      <div
+        className="call-controls-glass flex items-center justify-center gap-5 py-6 px-8"
+        style={{ animation: 'fadeInUp 0.4s ease 0.1s both' }}
+      >
 
         {/* Mute / Unmute */}
         <CallButton
@@ -747,7 +780,7 @@ function CallButton({ id, active, onClick, icon, label }) {
   );
 }
 
-function RemoteVideo({ stream, user: pUser, isFullScreen }) {
+function RemoteVideo({ stream, user: pUser, isFullScreen, isCover }) {
   const videoRef = useRef(null);
   const bgVideoRef = useRef(null);
 
@@ -762,31 +795,41 @@ function RemoteVideo({ stream, user: pUser, isFullScreen }) {
 
   useEffect(() => {
     const bgEl = bgVideoRef.current;
-    if (bgEl && stream && isFullScreen) {
+    if (bgEl && stream && isFullScreen && !isCover) {
       bgEl.srcObject = null;
       bgEl.srcObject = stream;
       bgEl.play().catch((e) => console.warn('RemoteVideo bg play error:', e.message));
     }
-  }, [stream, isFullScreen]);
+  }, [stream, isFullScreen, isCover]);
 
   if (isFullScreen) {
     return (
-      <div className="absolute inset-0 w-full h-full overflow-hidden bg-[#060a11] flex items-center justify-center">
-        {/* Ambient blurred background mirror */}
-        <video
-          ref={bgVideoRef}
-          autoPlay
-          muted
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-30 scale-105 pointer-events-none"
-        />
-        {/* Crisp contained foreground video */}
+      <div 
+        className="absolute inset-0 w-full h-full overflow-hidden bg-[#060a11] flex items-center justify-center"
+      >
+        {/* Ambient blurred background mirror (only shown in Contain mode) */}
+        {!isCover && (
+          <video
+            ref={bgVideoRef}
+            autoPlay
+            muted
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-30 scale-105 pointer-events-none"
+          />
+        )}
+        
+        {/* Crisp foreground video */}
         <video
           ref={videoRef}
           autoPlay
           playsInline
-          className="relative max-w-full max-h-full object-contain z-10"
+          className={
+            isCover 
+              ? "absolute inset-0 w-full h-full object-cover z-10" 
+              : "relative max-w-full max-h-full object-contain z-10"
+          }
         />
+
         <div className="name-tag z-20">{pUser?.name || 'Participant'}</div>
       </div>
     );
