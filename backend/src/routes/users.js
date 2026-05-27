@@ -5,6 +5,7 @@ const path = require('path');
 const User = require('../models/User');
 const { protect } = require('../middleware/auth');
 const upload = require('../middleware/upload');
+const { uploadToS3 } = require('../config/s3');
 
 // @route  POST /api/users/sync-contacts
 // Accepts array of phone numbers, returns matched VipConnect users
@@ -101,8 +102,8 @@ router.put(
     }
 
     const user = await User.findById(req.user._id);
-    const fileUrl = `${req.protocol}://${req.get('host')}/uploads/avatars/${req.file.filename}`;
-    user.avatar = { url: fileUrl, filename: req.file.filename };
+    const { url, filename } = await uploadToS3(req.file.buffer, req.file.originalname, req.file.mimetype, 'avatars');
+    user.avatar = { url, filename };
     await user.save();
 
     res.json({ success: true, user: user.toSafeObject() });

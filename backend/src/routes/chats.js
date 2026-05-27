@@ -6,6 +6,7 @@ const Message = require('../models/Message');
 const User = require('../models/User');
 const { protect } = require('../middleware/auth');
 const upload = require('../middleware/upload');
+const { uploadToS3 } = require('../config/s3');
 
 // @route  GET /api/chats — Get all chats for current user
 router.get(
@@ -86,12 +87,16 @@ router.post(
       memberIds.push(req.user._id.toString());
     }
 
-    const groupPicture = req.file
-      ? {
-          url: `${req.protocol}://${req.get('host')}/uploads/groups/${req.file.filename}`,
-          filename: req.file.filename,
-        }
-      : { url: '', filename: '' };
+    let groupPicture = { url: '', filename: '' };
+    if (req.file) {
+      const { url, filename } = await uploadToS3(
+        req.file.buffer,
+        req.file.originalname,
+        req.file.mimetype,
+        'groups'
+      );
+      groupPicture = { url, filename };
+    }
 
     const chat = await Chat.create({
       isGroup: true,
@@ -167,10 +172,13 @@ router.put(
     if (req.body.description !== undefined) chat.description = req.body.description;
 
     if (req.file) {
-      chat.groupPicture = {
-        url: `${req.protocol}://${req.get('host')}/uploads/groups/${req.file.filename}`,
-        filename: req.file.filename,
-      };
+      const { url, filename } = await uploadToS3(
+        req.file.buffer,
+        req.file.originalname,
+        req.file.mimetype,
+        'groups'
+      );
+      chat.groupPicture = { url, filename };
     }
 
     await chat.save();

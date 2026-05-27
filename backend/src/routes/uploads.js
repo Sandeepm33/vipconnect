@@ -6,6 +6,7 @@ const Message = require('../models/Message');
 const Chat = require('../models/Chat');
 const { protect } = require('../middleware/auth');
 const upload = require('../middleware/upload');
+const { uploadToS3 } = require('../config/s3');
 
 // @route  POST /api/uploads/message/:chatId — Upload file for a message
 router.post(
@@ -41,7 +42,7 @@ router.post(
       subDir = 'audio';
     }
 
-    const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${subDir}/${req.file.filename}`;
+    const { url, filename } = await uploadToS3(req.file.buffer, req.file.originalname, req.file.mimetype, subDir);
 
     const message = await Message.create({
       chat: req.params.chatId,
@@ -49,8 +50,8 @@ router.post(
       type,
       content: req.body.caption || '',
       file: {
-        url: fileUrl,
-        filename: req.file.filename,
+        url,
+        filename,
         originalName: req.file.originalname,
         mimeType: req.file.mimetype,
         size: req.file.size,

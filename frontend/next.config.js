@@ -13,6 +13,16 @@ const nextConfig = {
         hostname: 'vipconnect.onrender.com',
         pathname: '/uploads/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'vipconnect-862369801433-ap-southeast-2-an.s3.ap-southeast-2.amazonaws.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.amazonaws.com',
+        pathname: '/**',
+      },
     ],
   },
   // For PWA support in future
