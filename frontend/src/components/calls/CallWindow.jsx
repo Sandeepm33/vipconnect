@@ -4,6 +4,7 @@ import useCallStore from '@/store/callStore';
 import useWebRTC from '@/hooks/useWebRTC';
 import useAuthStore from '@/store/authStore';
 import { getSocket } from '@/lib/socket';
+import toast from 'react-hot-toast';
 
 export default function CallWindow() {
   const {
@@ -33,7 +34,63 @@ export default function CallWindow() {
   const [callDuration, setCallDuration] = useState(0);
   const durationRef = useRef(null);
   const activeCallRef = useRef(activeCall);
+  const [facingMode, setFacingMode] = useState('user');
   useEffect(() => { activeCallRef.current = activeCall; }, [activeCall]);
+
+  const handleSwitchCamera = useCallback(async () => {
+    if (!localStream) return;
+    const videoTrack = localStream.getVideoTracks()[0];
+    if (!videoTrack) {
+      toast.error('No video track to switch');
+      return;
+    }
+
+    try {
+      const nextFacingMode = facingMode === 'user' ? 'environment' : 'user';
+      toast('Switching camera...', { icon: '🔄' });
+
+      // Stop old video track
+      videoTrack.stop();
+
+      // Request new stream with the updated facing mode
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: nextFacingMode } },
+        audio: isAudioEnabled
+      });
+
+      const newVideoTrack = newStream.getVideoTracks()[0];
+      if (newVideoTrack) {
+        // Remove old track and add new track to existing localStream
+        localStream.removeTrack(videoTrack);
+        localStream.addTrack(newVideoTrack);
+
+        // Update active tracks in all peer connections
+        const { peerConnections } = useCallStore.getState();
+        Object.values(peerConnections).forEach((pc) => {
+          const sender = pc.getSenders().find((s) => s.track?.kind === 'video');
+          if (sender) {
+            sender.replaceTrack(newVideoTrack).catch(err => {
+              console.error('replaceTrack error:', err);
+            });
+          }
+        });
+
+        // Trigger reference update to local video elements
+        if (localVideoRef.current) {
+          localVideoRef.current.srcObject = null;
+          localVideoRef.current.srcObject = localStream;
+        }
+
+        setFacingMode(nextFacingMode);
+        toast.success(`Switched to ${nextFacingMode === 'user' ? 'front' : 'back'} camera`);
+      } else {
+        toast.error('Could not get new camera track');
+      }
+    } catch (err) {
+      console.error('Switch camera error:', err);
+      toast.error(`Could not switch camera: ${err.message || 'Unknown error'}`);
+    }
+  }, [localStream, facingMode, isAudioEnabled]);
 
   // ─── Start call: get media and connect to any pre-existing participants ───
   useEffect(() => {
@@ -75,9 +132,10 @@ export default function CallWindow() {
 
   useEffect(() => {
     if (localStream && localVideoRef.current) {
+      localVideoRef.current.srcObject = null;
       localVideoRef.current.srcObject = localStream;
     }
-  }, [localStream]);
+  }, [localStream, remoteStreams]);
 
   // ─── Socket event handlers ────────────────────────────────────────────────
   useEffect(() => {
@@ -448,37 +506,65 @@ export default function CallWindow() {
 
         {/* Video Call */}
         {isVideo ? (
-          <div className={`h-full grid gap-2 p-3 ${gridClass}`}>
-            {remoteStreamEntries.map(([socketId, { stream, user: pUser }]) => (
-              <RemoteVideo key={socketId} stream={stream} user={pUser} />
-            ))}
-
-            {/* Waiting state */}
-            {remoteStreamEntries.length === 0 && (
-              <div className="video-tile video-tile-waiting flex items-center justify-center">
-                <div className="text-center" style={{ animation: 'fadeInUp 0.5s ease both' }}>
-                  <div className="relative w-28 h-28 mx-auto mb-6">
-                    <div className="pulse-ring-1" />
-                    <div className="pulse-ring-2" />
-                    <div className="w-full h-full rounded-full overflow-hidden bg-[#1a2035] flex items-center justify-center relative z-10 avatar-glow">
-                      {displayAvatar ? (
-                        <img src={displayAvatar} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <span className="text-4xl font-bold text-violet-400">
-                          {displayName?.charAt(0)?.toUpperCase()}
-                        </span>
-                      )}
+          <div className="h-full w-full relative">
+            {remoteStreamEntries.length === 0 ? (
+              // ─── WAITING STATE: Local camera feeds full-screen, remote avatar overlaid ───
+              <div className="absolute inset-0 w-full h-full overflow-hidden">
+                <video
+                  ref={localVideoRef}
+                  autoPlay
+                  muted
+                  playsInline
+                  className="w-full h-full object-cover"
+                  style={{ transform: facingMode === 'user' ? 'scaleX(-1)' : 'none' }}
+                />
+                {!isVideoEnabled && (
+                  <div className="absolute inset-0 bg-[#0d1220] flex items-center justify-center">
+                    <span className="text-5xl font-bold text-violet-400">
+                      {user?.name?.charAt(0)?.toUpperCase()}
+                    </span>
+                  </div>
+                )}
+                {/* Profile detail overlay */}
+                <div className="absolute inset-0 flex items-center justify-center bg-black/45 backdrop-blur-[2px] z-10">
+                  <div className="text-center" style={{ animation: 'fadeInUp 0.5s ease both' }}>
+                    <div className="relative w-28 h-28 mx-auto mb-6">
+                      <div className="pulse-ring-1" />
+                      <div className="pulse-ring-2" />
+                      <div className="w-full h-full rounded-full overflow-hidden bg-[#1a2035] flex items-center justify-center relative z-10 avatar-glow">
+                        {displayAvatar ? (
+                          <img src={displayAvatar} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-4xl font-bold text-violet-400">
+                            {displayName?.charAt(0)?.toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <p className="text-white font-semibold text-lg mb-1">{displayName}</p>
+                    <p className="text-gray-300 text-sm">Waiting to connect…</p>
+                    <div className="flex justify-center gap-1.5 mt-4">
+                      {[0, 1, 2].map((i) => (
+                        <div key={i} className="w-1.5 h-1.5 rounded-full bg-violet-400"
+                             style={{ animation: `callPulse 1.4s ease-in-out infinite`, animationDelay: `${i * 0.2}s` }} />
+                      ))}
                     </div>
                   </div>
-                  <p className="text-white font-semibold text-lg mb-1">{displayName}</p>
-                  <p className="text-gray-500 text-sm">Waiting to connect…</p>
-                  <div className="flex justify-center gap-1.5 mt-4">
-                    {[0, 1, 2].map((i) => (
-                      <div key={i} className="w-1.5 h-1.5 rounded-full bg-violet-400"
-                           style={{ animation: `callPulse 1.4s ease-in-out infinite`, animationDelay: `${i * 0.2}s` }} />
-                    ))}
-                  </div>
                 </div>
+              </div>
+            ) : remoteStreamEntries.length === 1 ? (
+              // ─── ONE-ON-ONE STATE: Remote stream covers screen, local floats in PiP ───
+              <div className="absolute inset-0 w-full h-full overflow-hidden">
+                {remoteStreamEntries.map(([socketId, { stream, user: pUser }]) => (
+                  <RemoteVideo key={socketId} stream={stream} user={pUser} isFullScreen={true} />
+                ))}
+              </div>
+            ) : (
+              // ─── GROUP STATE: Remote streams arranged in grid, local floats in PiP ───
+              <div className={`h-full grid gap-2 p-3 ${gridClass}`}>
+                {remoteStreamEntries.map(([socketId, { stream, user: pUser }]) => (
+                  <RemoteVideo key={socketId} stream={stream} user={pUser} isFullScreen={false} />
+                ))}
               </div>
             )}
           </div>
@@ -534,8 +620,8 @@ export default function CallWindow() {
           </div>
         )}
 
-        {/* Local video PiP */}
-        {isVideo && (
+        {/* Local video PiP box overlay (only shown when call is connected/active) */}
+        {isVideo && remoteStreamEntries.length > 0 && (
           <div className="pip-local">
             <video
               ref={localVideoRef}
@@ -543,7 +629,7 @@ export default function CallWindow() {
               muted
               playsInline
               className="w-full h-full object-cover"
-              style={{ transform: 'scaleX(-1)' }}
+              style={{ transform: facingMode === 'user' ? 'scaleX(-1)' : 'none' }}
             />
             {!isVideoEnabled && (
               <div className="absolute inset-0 flex items-center justify-center bg-[#0d1220]">
@@ -607,6 +693,22 @@ export default function CallWindow() {
           />
         )}
 
+        {/* Switch Camera button (video only) */}
+        {isVideo && localStream && localStream.getVideoTracks().length > 0 && (
+          <CallButton
+            id="switch-camera-btn"
+            active={false}
+            onClick={handleSwitchCamera}
+            label="Flip Cam"
+            icon={
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3-3 3 3m-3-3v12" />
+              </svg>
+            }
+          />
+        )}
+
         {/* End Call */}
         <div className="ctrl-btn" onClick={handleEndCall}>
           <button
@@ -645,7 +747,7 @@ function CallButton({ id, active, onClick, icon, label }) {
   );
 }
 
-function RemoteVideo({ stream, user: pUser }) {
+function RemoteVideo({ stream, user: pUser, isFullScreen }) {
   const videoRef = useRef(null);
 
   useEffect(() => {
@@ -658,7 +760,7 @@ function RemoteVideo({ stream, user: pUser }) {
   }, [stream]);
 
   return (
-    <div className="video-tile">
+    <div className={isFullScreen ? "absolute inset-0 w-full h-full overflow-hidden" : "video-tile"}>
       <video
         ref={videoRef}
         autoPlay
