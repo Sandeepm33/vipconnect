@@ -38,6 +38,35 @@ export default function ChatWindow() {
   const typingInChat = typingUsers[id] || {};
   const typingNames = Object.values(typingInChat).filter(Boolean);
 
+  const isBusiness = otherMember?.isBusiness;
+  const businessHours = otherMember?.businessHours;
+
+  const parseTime = (timeStr) => {
+    const clean = timeStr.trim().toUpperCase();
+    const isPM = clean.includes('PM');
+    const parts = clean.replace('AM', '').replace('PM', '').split(':');
+    let hours = parseInt(parts[0]);
+    const mins = parts[1] ? parseInt(parts[1]) : 0;
+    if (isPM && hours < 12) hours += 12;
+    if (!isPM && hours === 12) hours = 0;
+    return hours * 60 + mins;
+  };
+
+  const isOutOfHours = (() => {
+    if (!isBusiness || !businessHours) return false;
+    try {
+      const parts = businessHours.split('-');
+      if (parts.length !== 2) return false;
+      const start = parseTime(parts[0]);
+      const end = parseTime(parts[1]);
+      const now = new Date();
+      const currentMin = now.getHours() * 60 + now.getMinutes();
+      return currentMin < start || currentMin > end;
+    } catch {
+      return false;
+    }
+  })();
+
   useEffect(() => {
     if (!id) return;
     setPage(1);
@@ -157,8 +186,11 @@ export default function ChatWindow() {
               </div>
 
               <div className="min-w-0">
-                <h2 className="text-white font-semibold text-sm truncate group-hover:text-primary-300 transition-colors">
+                <h2 className="text-white font-semibold text-sm truncate group-hover:text-primary-300 transition-colors flex items-center gap-1.5">
                   {displayName}
+                  {isBusiness && (
+                    <span className="text-[9px] font-extrabold bg-primary-500/20 text-primary-400 px-1.5 py-0.5 rounded tracking-wide uppercase">Business</span>
+                  )}
                 </h2>
                 <div className="text-xs truncate">
                   {typingNames.length > 0 ? (
@@ -232,6 +264,15 @@ export default function ChatWindow() {
             if (e.target.scrollTop < 100 && hasMore && !isLoadingMore) loadMoreMessages();
           }}
         >
+          {/* Out of hours business alert */}
+          {isBusiness && isOutOfHours && (
+            <div className="flex justify-center my-3 message-enter">
+              <span className="text-[11px] text-orange-400 bg-orange-500/10 border border-orange-500/25 px-3.5 py-2 rounded-2xl max-w-xs text-center leading-normal">
+                💼 Out of business hours ({businessHours}). Replies may be slow.
+              </span>
+            </div>
+          )}
+
           {/* Load more spinner */}
           {isLoadingMore && (
             <div className="flex justify-center py-3">

@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 
 import useAuthStore from '@/store/authStore';
 import useChatStore from '@/store/chatStore';
+import useAIStore from '@/store/aiStore';
 
 export default function MessageInput({ chatId, editingMessage, onCancelEdit }) {
   const [message, setMessage] = useState('');
@@ -16,7 +17,11 @@ export default function MessageInput({ chatId, editingMessage, onCancelEdit }) {
   const { sendMessage, sendTypingStart, sendTypingStop, notifyFileSent, editMessage } = useSocket();
   const activeChat = useChatStore((s) => s.activeChat);
   const { user } = useAuthStore();
+  const { summarizeConversation } = useAIStore();
   
+  const messages = useChatStore((s) => s.messages[chatId] || []);
+  const [aiSummary, setAiSummary] = useState('');
+
   const isAdmin = activeChat?.admins?.some((a) => a._id === user?._id || a === user?._id);
   const restricted = activeChat?.isGroup && activeChat?.settings?.adminOnlyMessage && !isAdmin;
 
@@ -83,6 +88,15 @@ export default function MessageInput({ chatId, editingMessage, onCancelEdit }) {
     }
   };
 
+  const handleAiSummarize = async () => {
+    if (messages.length === 0) return;
+    const textArray = messages.slice(-15).map(m => `${m.sender?.name || 'User'}: ${m.content}`);
+    const res = await summarizeConversation(textArray);
+    if (res.success) {
+      setAiSummary(res.summary);
+    }
+  };
+
   if (restricted) {
     return (
       <div className="flex-shrink-0 px-4 py-4 bg-chat-header border-t border-chat-border text-center">
@@ -93,8 +107,66 @@ export default function MessageInput({ chatId, editingMessage, onCancelEdit }) {
     );
   }
 
+  // Quick replies conditions
+  const showQuickReplies = message.startsWith('/') && user?.quickReplies?.length > 0;
+  const filterQuery = message.slice(1).toLowerCase();
+  const matchedReplies = user?.quickReplies?.filter(q => q.trigger.toLowerCase().startsWith(filterQuery)) || [];
+
   return (
-    <div className="flex-shrink-0 px-4 py-3 bg-chat-header border-t border-chat-border flex flex-col gap-2">
+    <div className="flex-shrink-0 px-4 py-3 bg-chat-header border-t border-chat-border flex flex-col gap-2 relative">
+      {/* Floating Quick Replies popover */}
+      {showQuickReplies && matchedReplies.length > 0 && (
+        <div className="absolute bottom-16 left-4 right-4 max-h-48 overflow-y-auto rounded-2xl border border-white/10 p-2 shadow-2xl z-[90] space-y-1"
+             style={{ background: 'rgba(15, 23, 42, 0.95)', backdropFilter: 'blur(20px)' }}>
+          <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider px-2 py-1">Quick Replies</p>
+          {matchedReplies.map((q, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => {
+                setMessage(q.reply);
+                // Adjust textarea height if needed
+                const el = document.getElementById(`message-input-${chatId}`);
+                if (el) el.style.height = 'auto';
+              }}
+              className="w-full text-left px-3 py-2 rounded-xl text-xs text-gray-300 hover:text-white hover:bg-white/5 transition flex justify-between items-center"
+            >
+              <span className="font-bold text-primary-400">/{q.trigger}</span>
+              <span className="text-gray-400 truncate max-w-[70%]">{q.reply}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* AI Summary banner overlay */}
+      {aiSummary && (
+        <div className="bg-primary-500/10 border border-primary-500/20 px-4 py-3 rounded-2xl text-xs text-gray-300 flex flex-col gap-1.5 relative">
+          <span className="text-[10px] font-bold text-primary-400 uppercase tracking-widest">ConnectX AI Summary</span>
+          <p className="whitespace-pre-line leading-relaxed">{aiSummary}</p>
+          <button
+            onClick={() => setAiSummary('')}
+            className="absolute right-3 top-3 text-gray-400 hover:text-white"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+
+      {/* Action helpers deck */}
+      {messages.length > 0 && !aiSummary && (
+        <div className="flex gap-2 pb-0.5">
+          <button
+            type="button"
+            onClick={handleAiSummarize}
+            className="px-2.5 py-1 rounded-full bg-primary-500/10 hover:bg-primary-500/20 border border-primary-500/20 text-[10px] font-bold text-primary-400 hover:text-white transition flex items-center gap-1 active:scale-95"
+          >
+            ✨ Summarize Chat
+          </button>
+        </div>
+      )}
+
       {editingMessage && (
         <div className="flex items-center justify-between bg-dark-600 px-4 py-2 rounded-xl text-sm border border-chat-border">
           <div className="flex items-center gap-2">
@@ -110,8 +182,9 @@ export default function MessageInput({ chatId, editingMessage, onCancelEdit }) {
           </button>
         </div>
       )}
+
       <div className="flex items-end gap-3">
-        {/* File attachment */}
+        {/* File attachments */}
         <div className="flex items-center gap-1">
           <input
             ref={fileInputRef}
@@ -136,7 +209,6 @@ export default function MessageInput({ chatId, editingMessage, onCancelEdit }) {
             )}
           </button>
 
-          {/* Image only button */}
           <button
             onClick={() => {
               if (fileInputRef.current) {
@@ -176,10 +248,9 @@ export default function MessageInput({ chatId, editingMessage, onCancelEdit }) {
             }}
           />
 
-          {/* Emoji placeholder */}
           <button
             className="absolute right-3 bottom-3 text-gray-500 hover:text-gray-300 transition-colors"
-            title="Emoji (coming soon)"
+            title="Emoji drawer (coming soon)"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -187,7 +258,7 @@ export default function MessageInput({ chatId, editingMessage, onCancelEdit }) {
           </button>
         </div>
 
-        {/* Send button */}
+        {/* Send triggers */}
         <button
           id={`send-btn-${chatId}`}
           onClick={handleSend}

@@ -56,12 +56,37 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    isBusiness: {
+      type: Boolean,
+      default: false,
+    },
+    businessHours: {
+      type: String,
+      default: '9:00 AM - 5:00 PM',
+    },
+    quickReplies: [
+      {
+        trigger: { type: String, required: true },
+        reply: { type: String, required: true },
+      }
+    ],
+    walletBalance: {
+      type: Number,
+      default: 1000,
+    },
+    upiId: {
+      type: String,
+      default: '',
+    },
   },
   { timestamps: true }
 );
 
-// Hash password before save
+// Hash password before save & set default UPI ID
 userSchema.pre('save', async function (next) {
+  if (!this.upiId && this.email) {
+    this.upiId = `${this.email.split('@')[0]}@connectx`;
+  }
   if (!this.isModified('password')) return next();
   const salt = await bcrypt.genSalt(12);
   this.password = await bcrypt.hash(this.password, salt);
@@ -84,6 +109,11 @@ userSchema.methods.toSafeObject = function () {
     about: this.about,
     status: this.status,
     lastSeen: this.lastSeen,
+    isBusiness: this.isBusiness,
+    businessHours: this.businessHours,
+    quickReplies: this.quickReplies,
+    walletBalance: this.walletBalance,
+    upiId: this.upiId,
     createdAt: this.createdAt,
   };
 };

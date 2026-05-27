@@ -22,8 +22,8 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Serve static uploads (Disabled - All uploads served via S3)
-// app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// Serve static uploads (Fall back for local file uploads)
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Connect DB
 connectDB();
@@ -34,6 +34,10 @@ app.use('/api/users', require('./routes/users'));
 app.use('/api/chats', require('./routes/chats'));
 app.use('/api/messages', require('./routes/messages'));
 app.use('/api/uploads', require('./routes/uploads'));
+app.use('/api/status', require('./routes/status'));
+app.use('/api/communities', require('./routes/communities'));
+app.use('/api/business', require('./routes/business'));
+app.use('/api/ai', require('./routes/ai'));
 
 // Health check
 app.get('/api/health', (req, res) => {
