@@ -749,6 +749,7 @@ function CallButton({ id, active, onClick, icon, label }) {
 
 function RemoteVideo({ stream, user: pUser, isFullScreen }) {
   const videoRef = useRef(null);
+  const bgVideoRef = useRef(null);
 
   useEffect(() => {
     const el = videoRef.current;
@@ -759,8 +760,40 @@ function RemoteVideo({ stream, user: pUser, isFullScreen }) {
     }
   }, [stream]);
 
+  useEffect(() => {
+    const bgEl = bgVideoRef.current;
+    if (bgEl && stream && isFullScreen) {
+      bgEl.srcObject = null;
+      bgEl.srcObject = stream;
+      bgEl.play().catch((e) => console.warn('RemoteVideo bg play error:', e.message));
+    }
+  }, [stream, isFullScreen]);
+
+  if (isFullScreen) {
+    return (
+      <div className="absolute inset-0 w-full h-full overflow-hidden bg-[#060a11] flex items-center justify-center">
+        {/* Ambient blurred background mirror */}
+        <video
+          ref={bgVideoRef}
+          autoPlay
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-30 scale-105 pointer-events-none"
+        />
+        {/* Crisp contained foreground video */}
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          className="relative max-w-full max-h-full object-contain z-10"
+        />
+        <div className="name-tag z-20">{pUser?.name || 'Participant'}</div>
+      </div>
+    );
+  }
+
   return (
-    <div className={isFullScreen ? "absolute inset-0 w-full h-full overflow-hidden" : "video-tile"}>
+    <div className="video-tile">
       <video
         ref={videoRef}
         autoPlay
