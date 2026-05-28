@@ -200,7 +200,7 @@ export default function MessageBubble({ message, isOwn, showAvatar, isAdmin, onD
           onMouseLeave={() => { setShowReactions(false); setShowLanguages(false); }}
         >
           {showReactions && !isDeleted && (
-            <div className={`absolute -top-3.5 ${isOwn ? '-left-20' : '-right-20'} flex items-center gap-1 bg-[#161b22] border border-white/10 rounded-full p-1 shadow-2xl z-20`}>
+            <div className={`absolute -top-3.5 ${isOwn ? 'right-full mr-2 after:absolute after:-right-2 after:top-0 after:bottom-0 after:w-2 after:content-[\'\']' : 'left-full ml-2 after:absolute after:-left-2 after:top-0 after:bottom-0 after:w-2 after:content-[\'\']'} flex items-center gap-1 bg-[#161b22] border border-white/10 rounded-full p-1 shadow-2xl z-20`}>
               {/* Translate button */}
               <button
                 onClick={() => setShowLanguages(!showLanguages)}
