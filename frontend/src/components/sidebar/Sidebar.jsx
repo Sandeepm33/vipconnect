@@ -33,7 +33,7 @@ export default function Sidebar() {
     <>
       <div className="w-full md:w-[428px] h-full flex flex-shrink-0 border-r border-white/5 overflow-hidden">
         {/* ── Left Vertical Navigation Rail (68px) ────────────────────────── */}
-        <div className="w-[68px] h-full flex flex-col items-center justify-between py-5 border-r border-white/5 flex-shrink-0"
+        <div className="w-[68px] h-full flex flex-col items-center justify-between py-5 border-r border-white/5 flex-shrink-0 relative z-50"
              style={{ background: 'rgba(11, 16, 26, 0.95)', backdropFilter: 'blur(12px)' }}>
           {/* Top block: profile avatar */}
           <div className="flex flex-col items-center gap-7 w-full">

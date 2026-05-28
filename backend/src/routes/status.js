@@ -61,8 +61,8 @@ router.get(
   protect,
   asyncHandler(async (req, res) => {
     // Get all statuses from the last 24h
-    // Since TTL is set to 24h, mongoose query will naturally yield only unexpired status documents
-    const statuses = await Status.find()
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const statuses = await Status.find({ createdAt: { $gte: twentyFourHoursAgo } })
       .populate('user', 'name avatar')
       .populate('views.user', 'name avatar')
       .sort({ createdAt: -1 });

@@ -9,13 +9,25 @@ export default function StoryPlayer({ group, onClose }) {
   const [progress, setProgress] = useState(0);
   const [replyText, setReplyText] = useState('');
   const [showViewers, setShowViewers] = useState(false);
+  const [showDeleteMenu, setShowDeleteMenu] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
   const { createChat, addMessage } = useChatStore();
   const { user: currentUser } = useAuthStore();
-  const { viewStatus } = useStatusStore();
+  const { viewStatus, deleteStatus } = useStatusStore();
   const timerRef = useRef(null);
+  const mediaRef = useRef(null);
 
   const activeStory = group.items[index];
   const isOwnStory = group.user?._id === currentUser?._id;
+  const isMedia = activeStory?.mediaType === 'video' || activeStory?.mediaType === 'voice';
+  const isPaused = showViewers || showDeleteMenu;
+
+  const getMediaUrl = (url) => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('blob:')) return url;
+    const backendBase = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000';
+    return `${backendBase}${url}`;
+  };
 
   // Deduplicate views by user ID in the UI to ensure no duplicates are rendered or counted
   const uniqueViews = (() => {
@@ -44,14 +56,34 @@ export default function StoryPlayer({ group, onClose }) {
     }
   }, [activeStory, isOwnStory, viewStatus]);
 
-  // Auto progression
+  // Reset progress when index changes
   useEffect(() => {
-    if (showViewers) {
+    setProgress(0);
+  }, [index]);
+
+  // Handle play/pause of media element based on pause state
+  useEffect(() => {
+    if (isMedia && mediaRef.current) {
+      if (isPaused) {
+        mediaRef.current.pause();
+      } else {
+        mediaRef.current.play().catch((err) => console.log('Autoplay blocked:', err));
+      }
+    }
+  }, [isPaused, isMedia, index]);
+
+  // Auto progression for non-media (text/image)
+  useEffect(() => {
+    if (isMedia) {
       if (timerRef.current) clearInterval(timerRef.current);
       return;
     }
 
-    setProgress(0);
+    if (isPaused) {
+      if (timerRef.current) clearInterval(timerRef.current);
+      return;
+    }
+
     if (timerRef.current) clearInterval(timerRef.current);
 
     timerRef.current = setInterval(() => {
@@ -68,7 +100,7 @@ export default function StoryPlayer({ group, onClose }) {
       if (timerRef.current) clearInterval(timerRef.current);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index, showViewers]);
+  }, [index, isPaused, isMedia]);
 
   const handleNext = () => {
     if (index < group.items.length - 1) {
@@ -81,6 +113,41 @@ export default function StoryPlayer({ group, onClose }) {
   const handlePrev = () => {
     if (index > 0) {
       setIndex(index - 1);
+    }
+  };
+
+  const handleTimeUpdate = (e) => {
+    const { currentTime, duration } = e.target;
+    if (duration) {
+      setProgress((currentTime / duration) * 100);
+    }
+  };
+
+  const handleMediaEnded = () => {
+    handleNext();
+  };
+
+  const handleDeleteStatus = async () => {
+    if (!activeStory) return;
+    const targetId = activeStory._id;
+    const res = await deleteStatus(targetId);
+    if (res.success) {
+      setShowDeleteMenu(false);
+      group.items = group.items.filter((item) => item._id !== targetId);
+      if (group.items.length === 0) {
+        onClose();
+      } else {
+        if (index >= group.items.length) {
+          setIndex(group.items.length - 1);
+        } else {
+          setProgress(0);
+          setIndex(index);
+        }
+      }
+    } else {
+      import('react-hot-toast').then(({ default: toast }) => {
+        toast.error('Failed to delete status');
+      });
     }
   };
 
@@ -164,7 +231,7 @@ export default function StoryPlayer({ group, onClose }) {
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-800 flex items-center justify-center">
             {group.user?.avatar?.url ? (
-              <img src={group.user.avatar.url} alt={group.user.name} className="w-full h-full object-cover" />
+              <img src={getMediaUrl(group.user.avatar.url)} alt={group.user.name} className="w-full h-full object-cover" />
             ) : (
               <span className="text-white font-bold">{group.user?.name?.charAt(0)}</span>
             )}
@@ -176,11 +243,63 @@ export default function StoryPlayer({ group, onClose }) {
             </p>
           </div>
         </div>
-        <button onClick={onClose} className="text-white/60 hover:text-white p-2">
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Mute/Unmute toggle for video */}
+          {activeStory.mediaType === 'video' && (
+            <button
+              onClick={() => setIsMuted(!isMuted)}
+              className="text-white/60 hover:text-white p-2 rounded-full hover:bg-white/10 transition"
+              title={isMuted ? 'Unmute' : 'Mute'}
+            >
+              {isMuted ? (
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                </svg>
+              )}
+            </button>
+          )}
+
+          {/* Three-dot menu for own stories */}
+          {isOwnStory && (
+            <div className="relative">
+              <button
+                onClick={() => setShowDeleteMenu(!showDeleteMenu)}
+                className="text-white/60 hover:text-white p-2 rounded-full hover:bg-white/10 transition"
+                title="Options"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                </svg>
+              </button>
+
+              {showDeleteMenu && (
+                <div className="absolute right-0 mt-2 w-36 rounded-xl border border-white/10 shadow-2xl z-[200] overflow-hidden bg-gray-900">
+                  <button
+                    onClick={handleDeleteStatus}
+                    className="w-full text-left px-4 py-2.5 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 transition flex items-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Delete Status
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Close button */}
+          <button onClick={onClose} className="text-white/60 hover:text-white p-2 rounded-full hover:bg-white/10 transition">
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* ── STORY BODY ─────────────────────────────────────────────────── */}
@@ -200,7 +319,7 @@ export default function StoryPlayer({ group, onClose }) {
           </div>
         ) : activeStory.mediaType === 'image' ? (
           <div className="relative w-full h-full flex items-center justify-center bg-black">
-            <img src={activeStory.mediaUrl} alt="Status Content" className="max-w-full max-h-full object-contain" />
+            <img src={getMediaUrl(activeStory.mediaUrl)} alt="Status Content" className="max-w-full max-h-full object-contain" />
             {activeStory.caption && (
               <div className="absolute bottom-24 left-0 right-0 text-center px-6 py-3 bg-black/40 backdrop-blur-sm text-white text-base font-semibold">
                 {activeStory.caption}
@@ -209,7 +328,16 @@ export default function StoryPlayer({ group, onClose }) {
           </div>
         ) : activeStory.mediaType === 'video' ? (
           <div className="relative w-full h-full flex items-center justify-center bg-black">
-            <video src={activeStory.mediaUrl} autoPlay playsInline muted className="max-w-full max-h-full object-contain" />
+            <video
+              ref={mediaRef}
+              src={getMediaUrl(activeStory.mediaUrl)}
+              autoPlay
+              playsInline
+              muted={isMuted}
+              onTimeUpdate={handleTimeUpdate}
+              onEnded={handleMediaEnded}
+              className="max-w-full max-h-full object-contain"
+            />
             {activeStory.caption && (
               <div className="absolute bottom-24 left-0 right-0 text-center px-6 py-3 bg-black/40 backdrop-blur-sm text-white text-base font-semibold">
                 {activeStory.caption}
@@ -224,7 +352,15 @@ export default function StoryPlayer({ group, onClose }) {
               </svg>
             </div>
             <p className="text-lg font-semibold mb-2">Voice Note Status</p>
-            <audio src={activeStory.mediaUrl} controls autoPlay className="mt-4" />
+            <audio
+              ref={mediaRef}
+              src={getMediaUrl(activeStory.mediaUrl)}
+              controls
+              autoPlay
+              onTimeUpdate={handleTimeUpdate}
+              onEnded={handleMediaEnded}
+              className="mt-4"
+            />
           </div>
         )}
       </div>
@@ -325,7 +461,7 @@ export default function StoryPlayer({ group, onClose }) {
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-800 flex items-center justify-center flex-shrink-0">
                           {viewer.avatar?.url ? (
-                            <img src={viewer.avatar.url} alt={viewer.name} className="w-full h-full object-cover" />
+                            <img src={getMediaUrl(viewer.avatar.url)} alt={viewer.name} className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center bg-gradient-to-tr from-primary-500 to-indigo-600">
                               <span className="text-white font-bold text-sm">{initials}</span>
