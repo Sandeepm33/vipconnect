@@ -25,9 +25,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#080c14] flex overflow-hidden relative" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div className="min-h-screen w-full bg-[#030508] flex overflow-hidden relative" style={{ fontFamily: "'Outfit', 'Inter', sans-serif" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&display=swap');
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(24px); }
           to { opacity: 1; transform: translateY(0); }
@@ -53,14 +53,14 @@ export default function LoginPage() {
           to { transform: rotate(360deg); }
         }
         @keyframes pulse-glow {
-          0%, 100% { box-shadow: 0 0 20px rgba(124,58,237,0.3); }
-          50% { box-shadow: 0 0 50px rgba(124,58,237,0.7), 0 0 100px rgba(124,58,237,0.3); }
+          0%, 100% { box-shadow: 0 0 20px rgba(139,92,246,0.3); }
+          50% { box-shadow: 0 0 50px rgba(139,92,246,0.7), 0 0 100px rgba(139,92,246,0.3); }
         }
-        .animate-fadeInUp { animation: fadeInUp 0.7s ease both; }
-        .animate-slideInLeft { animation: slideInLeft 0.8s ease both; }
+        .animate-fadeInUp { animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        .animate-slideInLeft { animation: slideInLeft 0.8s cubic-bezier(0.16, 1, 0.3, 1) both; }
         .animate-float { animation: float 4s ease-in-out infinite; }
         .gradient-text {
-          background: linear-gradient(135deg, #a78bfa, #38bdf8, #34d399);
+          background: linear-gradient(135deg, #a78bfa, #8b5cf6, #38bdf8, #06b6d4);
           background-size: 200% 200%;
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
@@ -68,23 +68,30 @@ export default function LoginPage() {
           animation: gradient-x 4s ease infinite;
         }
         .glass {
-          background: rgba(255,255,255,0.04);
+          background: rgba(255,255,255,0.03);
           backdrop-filter: blur(20px);
           -webkit-backdrop-filter: blur(20px);
-          border: 1px solid rgba(255,255,255,0.08);
+          border: 1px solid rgba(255,255,255,0.05);
         }
-        .btn-glow {
+        .glass-premium {
+          background: rgba(8, 12, 21, 0.65);
+          backdrop-filter: blur(24px);
+          -webkit-backdrop-filter: blur(24px);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+        }
+        .btn-premium {
           position: relative;
           overflow: hidden;
-          background: linear-gradient(135deg, #7c3aed, #6d28d9);
-          box-shadow: 0 0 20px rgba(124,58,237,0.4);
-          transition: all 0.3s ease;
+          background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+          box-shadow: 0 4px 20px rgba(139, 92, 246, 0.35);
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .btn-glow:hover {
-          box-shadow: 0 0 40px rgba(124,58,237,0.7), 0 0 80px rgba(124,58,237,0.2);
-          transform: translateY(-1px);
+        .btn-premium:hover {
+          box-shadow: 0 4px 30px rgba(139, 92, 246, 0.55), 0 0 40px rgba(6, 182, 212, 0.25);
+          transform: translateY(-2px) scale(1.02);
         }
-        .btn-glow::after {
+        .btn-premium::after {
           content: '';
           position: absolute;
           top: -50%; left: -75%;
@@ -93,47 +100,47 @@ export default function LoginPage() {
           transform: skewX(-20deg);
           animation: shimmer 3s infinite;
         }
-        .btn-glow:disabled {
+        .btn-premium:disabled {
           opacity: 0.6;
           cursor: not-allowed;
           transform: none;
-          box-shadow: 0 0 20px rgba(124,58,237,0.3);
+          box-shadow: 0 0 20px rgba(139,92,246,0.3);
         }
         .input-field {
-          background: rgba(255,255,255,0.04);
-          border: 1px solid rgba(255,255,255,0.08);
+          background: rgba(255,255,255,0.03);
+          border: 1px solid rgba(255,255,255,0.06);
           transition: all 0.3s ease;
           color: white;
         }
         .input-field:focus {
           outline: none;
-          border-color: rgba(124,58,237,0.7);
-          background: rgba(124,58,237,0.06);
-          box-shadow: 0 0 0 3px rgba(124,58,237,0.12), 0 0 20px rgba(124,58,237,0.08);
+          border-color: rgba(139,92,246,0.6);
+          background: rgba(139,92,246,0.04);
+          box-shadow: 0 0 0 3px rgba(139,92,246,0.1), 0 0 20px rgba(139,92,246,0.05);
         }
-        .input-field::placeholder { color: rgba(156,163,175,0.5); }
+        .input-field::placeholder { color: rgba(156,163,175,0.4); }
         .feature-chip {
-          background: rgba(255,255,255,0.04);
-          border: 1px solid rgba(255,255,255,0.07);
+          background: rgba(255,255,255,0.03);
+          border: 1px solid rgba(255,255,255,0.05);
           backdrop-filter: blur(10px);
           transition: all 0.3s ease;
         }
         .feature-chip:hover {
-          background: rgba(124,58,237,0.08);
-          border-color: rgba(124,58,237,0.25);
+          background: rgba(139,92,246,0.08);
+          border-color: rgba(139,92,246,0.25);
         }
         .orbit-ring {
           position: absolute;
           border-radius: 50%;
-          border: 1px solid rgba(255,255,255,0.06);
+          border: 1px solid rgba(255,255,255,0.05);
         }
         .chat-bubble-in {
-          background: rgba(255,255,255,0.06);
-          border: 1px solid rgba(255,255,255,0.08);
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.06);
         }
         .chat-bubble-out {
-          background: linear-gradient(135deg, rgba(124,58,237,0.5), rgba(109,40,217,0.6));
-          border: 1px solid rgba(124,58,237,0.3);
+          background: linear-gradient(135deg, rgba(139,92,246,0.5), rgba(109,40,217,0.6));
+          border: 1px solid rgba(139,92,246,0.3);
         }
       `}</style>
 
@@ -146,8 +153,8 @@ export default function LoginPage() {
           className="absolute inset-0 w-full h-full object-cover"
         />
         {/* Overlay gradient */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#080c14]/10 via-[#080c14]/20 to-[#080c14]/90" />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#080c14]/50 via-transparent to-[#080c14]/60" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#030508]/10 via-[#030508]/20 to-[#030508]/90" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#030508]/50 via-transparent to-[#030508]/60" />
 
         {/* Floating UI mockup cards */}
         <div className="absolute inset-0 flex flex-col justify-between p-12 z-10">
@@ -227,7 +234,7 @@ export default function LoginPage() {
       {/* ── RIGHT PANEL: Login Form ── */}
       <div className="flex-1 flex flex-col justify-center items-center relative px-6 sm:px-10 py-12 z-10">
         {/* Background gradient */}
-        <div className="absolute inset-0 bg-[#080c14]" />
+        <div className="absolute inset-0 bg-[#030508]" />
         <div className="absolute top-0 right-0 w-96 h-96 bg-violet-600/5 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-80 h-80 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
 
@@ -249,33 +256,33 @@ export default function LoginPage() {
           <span className="text-2xl font-black text-white">Vip<span className="text-violet-400">Connect</span></span>
         </div>
 
-        {/* Form Card */}
-        <div className="relative z-10 w-full max-w-[400px]">
+        {/* Form Card (Premium glass-premium container) */}
+        <div className="relative z-10 w-full max-w-[420px] p-8 sm:p-10 glass-premium squircle shadow-2xl">
 
           {/* Header */}
-          <div className="mb-8 animate-fadeInUp" style={{ animationDelay: '0.05s' }}>
-            <h1 className="text-3xl sm:text-4xl font-black text-white mb-2">Welcome back</h1>
-            <p className="text-gray-500 text-sm sm:text-base">Sign in to continue to VipConnect</p>
+          <div className="mb-6 animate-fadeInUp" style={{ animationDelay: '0.05s' }}>
+            <h1 className="text-2xl sm:text-3xl font-black text-white mb-2">Welcome back</h1>
+            <p className="text-gray-400 text-xs sm:text-sm">Sign in to continue to VipConnect</p>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
 
             {/* Email Field */}
             <div className="animate-fadeInUp" style={{ animationDelay: '0.1s' }}>
-              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
                 Email or Phone
               </label>
               <div className="relative">
                 <div className={`absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors ${focusedField === 'email' ? 'text-violet-400' : 'text-gray-600'}`}>
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
                   </svg>
                 </div>
                 <input
                   id="email-input"
                   type="text"
-                  className="input-field w-full rounded-2xl py-3.5 pl-12 pr-4 text-sm"
+                  className="input-field w-full rounded-2xl py-3 pl-11 pr-4 text-xs font-semibold"
                   placeholder="you@example.com"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
@@ -288,24 +295,24 @@ export default function LoginPage() {
 
             {/* Password Field */}
             <div className="animate-fadeInUp" style={{ animationDelay: '0.15s' }}>
-              <div className="flex justify-between items-center mb-2">
-                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-widest">
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                   Password
                 </label>
-                <Link href="#" className="text-xs text-violet-400 hover:text-violet-300 transition-colors font-medium">
-                  Forgot password?
+                <Link href="#" className="text-[10px] text-violet-400 hover:text-violet-300 transition-colors font-medium">
+                  Forgot?
                 </Link>
               </div>
               <div className="relative">
                 <div className={`absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors ${focusedField === 'password' ? 'text-violet-400' : 'text-gray-600'}`}>
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
                 </div>
                 <input
                   id="password-input"
                   type={showPassword ? 'text' : 'password'}
-                  className="input-field w-full rounded-2xl py-3.5 pl-12 pr-12 text-sm"
+                  className="input-field w-full rounded-2xl py-3 pl-11 pr-11 text-xs font-semibold"
                   placeholder="Enter your password"
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
@@ -316,14 +323,14 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-300 transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors"
                 >
                   {showPassword ? (
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
                     </svg>
                   ) : (
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                     </svg>
@@ -333,22 +340,22 @@ export default function LoginPage() {
             </div>
 
             {/* Submit Button */}
-            <div className="animate-fadeInUp pt-2" style={{ animationDelay: '0.2s' }}>
+            <div className="animate-fadeInUp pt-1" style={{ animationDelay: '0.2s' }}>
               <button
                 id="login-btn"
                 type="submit"
                 disabled={isLoading}
-                className="btn-glow w-full text-white font-bold py-4 rounded-2xl text-base flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
+                className="btn-premium w-full text-white font-bold py-3 rounded-2xl text-sm flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <>
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     <span>Signing in...</span>
                   </>
                 ) : (
                   <>
                     <span>Sign In</span>
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                     </svg>
                   </>
@@ -358,19 +365,19 @@ export default function LoginPage() {
           </form>
 
           {/* Divider */}
-          <div className="animate-fadeInUp flex items-center gap-4 my-6" style={{ animationDelay: '0.25s' }}>
+          <div className="animate-fadeInUp flex items-center gap-4 my-4" style={{ animationDelay: '0.25s' }}>
             <div className="flex-1 h-px bg-white/5" />
-            <span className="text-xs text-gray-600 font-medium">or continue with</span>
+            <span className="text-[10px] text-gray-600 font-bold uppercase tracking-wider">or</span>
             <div className="flex-1 h-px bg-white/5" />
           </div>
 
           {/* Social Buttons */}
-          <div className="animate-fadeInUp grid grid-cols-2 gap-3 mb-8" style={{ animationDelay: '0.3s' }}>
+          <div className="animate-fadeInUp grid grid-cols-2 gap-3 mb-5" style={{ animationDelay: '0.3s' }}>
             {[
               {
                 name: 'Google',
                 icon: (
-                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
                     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                     <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
                     <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
@@ -381,7 +388,7 @@ export default function LoginPage() {
               {
                 name: 'GitHub',
                 icon: (
-                  <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
                   </svg>
                 )
@@ -391,10 +398,7 @@ export default function LoginPage() {
                 key={name}
                 type="button"
                 onClick={() => toast('Coming soon! 🚀')}
-                className="flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-semibold text-gray-300 hover:text-white transition-all"
-                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.borderColor = 'rgba(124,58,237,0.3)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
+                className="flex items-center justify-center gap-2 py-2.5 rounded-2xl text-xs font-semibold text-gray-300 hover:text-white transition-all bg-white/3 border border-white/5 hover:bg-white/8 hover:border-violet-500/30"
               >
                 {icon}
                 {name}
@@ -403,23 +407,23 @@ export default function LoginPage() {
           </div>
 
           {/* Sign up link */}
-          <p className="animate-fadeInUp text-center text-gray-500 text-sm" style={{ animationDelay: '0.35s' }}>
+          <p className="animate-fadeInUp text-center text-gray-400 text-xs" style={{ animationDelay: '0.35s' }}>
             Don&apos;t have an account?{' '}
             <Link href="/register" className="text-violet-400 hover:text-violet-300 font-semibold transition-colors">
-              Sign up for free →
+              Sign up free →
             </Link>
           </p>
 
           {/* Trust badges */}
-          <div className="animate-fadeInUp mt-10 flex items-center justify-center gap-6" style={{ animationDelay: '0.4s' }}>
+          <div className="animate-fadeInUp mt-6 flex items-center justify-center gap-5" style={{ animationDelay: '0.4s' }}>
             {[
               { icon: '🔒', label: 'E2E Encrypted' },
-              { icon: '⚡', label: 'Instant Access' },
+              { icon: '⚡', label: 'Instant Connect' },
               { icon: '🛡️', label: 'GDPR Compliant' },
             ].map(({ icon, label }) => (
-              <div key={label} className="flex flex-col items-center gap-1">
-                <span className="text-base">{icon}</span>
-                <span className="text-[10px] text-gray-600 font-medium">{label}</span>
+              <div key={label} className="flex items-center gap-1">
+                <span className="text-xs">{icon}</span>
+                <span className="text-[9px] text-gray-500 font-semibold uppercase tracking-wider">{label}</span>
               </div>
             ))}
           </div>
@@ -428,3 +432,4 @@ export default function LoginPage() {
     </div>
   );
 }
+

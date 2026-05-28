@@ -159,7 +159,7 @@ export default function Home() {
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen bg-[#080c14] text-white overflow-x-hidden relative" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div className="min-h-screen bg-[#030508] text-white overflow-x-hidden relative" style={{ fontFamily: "'Inter', sans-serif" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
         @keyframes float-particle {
@@ -183,7 +183,7 @@ export default function Home() {
           to { opacity: 1; }
         }
         @keyframes scaleIn {
-          from { opacity: 0; transform: scale(0.92); }
+          from { opacity: 0; transform: scale(0.95); }
           to { opacity: 1; transform: scale(1); }
         }
         @keyframes orbit {
@@ -199,14 +199,14 @@ export default function Home() {
           to { transform: rotate(600deg) translateX(170px) rotate(-600deg); }
         }
         @keyframes pulse-ring {
-          0% { transform: scale(0.8); opacity: 0.6; }
-          100% { transform: scale(1.6); opacity: 0; }
+          0% { transform: scale(0.85); opacity: 0.5; }
+          100% { transform: scale(1.7); opacity: 0; }
         }
-        .animate-fadeInUp { animation: fadeInUp 0.8s ease both; }
+        .animate-fadeInUp { animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both; }
         .animate-fadeIn { animation: fadeIn 0.8s ease both; }
-        .animate-scaleIn { animation: scaleIn 0.8s ease both; }
+        .animate-scaleIn { animation: scaleIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) both; }
         .gradient-text {
-          background: linear-gradient(135deg, #a78bfa, #38bdf8, #34d399);
+          background: linear-gradient(135deg, #a78bfa, #8b5cf6, #38bdf8, #06b6d4);
           background-size: 200% 200%;
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
@@ -214,27 +214,35 @@ export default function Home() {
           animation: gradient-x 4s ease infinite;
         }
         .glass {
-          background: rgba(255,255,255,0.04);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
-          border: 1px solid rgba(255,255,255,0.08);
+          background: rgba(255, 255, 255, 0.03);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .glass-premium {
+          background: rgba(8, 12, 21, 0.65);
+          backdrop-filter: blur(24px);
+          -webkit-backdrop-filter: blur(24px);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.05);
         }
         .glass-hover:hover {
-          background: rgba(255,255,255,0.07);
-          border-color: rgba(139,92,246,0.3);
+          background: rgba(255,255,255,0.06);
+          border-color: rgba(139,92,246,0.25);
+          box-shadow: 0 0 25px rgba(139,92,246,0.15);
         }
-        .btn-glow {
+        .btn-premium {
           position: relative;
           overflow: hidden;
-          background: linear-gradient(135deg, #7c3aed, #6d28d9);
-          transition: all 0.3s ease;
-          box-shadow: 0 0 20px rgba(124,58,237,0.4);
+          background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+          box-shadow: 0 4px 20px rgba(139, 92, 246, 0.35);
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .btn-glow:hover {
-          box-shadow: 0 0 35px rgba(124,58,237,0.6), 0 0 70px rgba(124,58,237,0.2);
+        .btn-premium:hover {
+          box-shadow: 0 4px 30px rgba(139, 92, 246, 0.55), 0 0 40px rgba(6, 182, 212, 0.25);
           transform: translateY(-2px) scale(1.02);
         }
-        .btn-glow::after {
+        .btn-premium::after {
           content: '';
           position: absolute;
           top: -50%; left: -75%;
@@ -243,11 +251,11 @@ export default function Home() {
           transform: skewX(-20deg);
           animation: shimmer 3s infinite;
         }
-        .feature-card { transition: all 0.4s cubic-bezier(0.4,0,0.2,1); }
-        .feature-card:hover { transform: translateY(-8px); }
+        .feature-card { transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .feature-card:hover { transform: translateY(-6px); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .hero-bg { background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(124,58,237,0.15), transparent 70%), radial-gradient(ellipse 50% 50% at 80% 50%, rgba(6,182,212,0.08), transparent 60%), #080c14; }
+        .hero-bg { background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(139,92,246,0.15), transparent 70%), radial-gradient(ellipse 50% 50% at 80% 50%, rgba(6,182,212,0.08), transparent 60%), #030508; }
       `}</style>
 
       {/* Hero Background */}
@@ -286,7 +294,7 @@ export default function Home() {
         {/* CTA Buttons */}
         <div className="flex items-center gap-3">
           {isAuthenticated ? (
-            <Link href="/chat" className="btn-glow text-white font-semibold px-5 py-2.5 rounded-full text-sm">
+            <Link href="/chat" className="btn-premium text-white font-semibold px-5 py-2.5 rounded-full text-sm">
               Open App
             </Link>
           ) : (
@@ -294,7 +302,7 @@ export default function Home() {
               <Link href="/login" className="text-gray-300 hover:text-white px-4 py-2 text-sm font-medium transition-colors">
                 Sign In
               </Link>
-              <Link href="/register" className="btn-glow text-white font-semibold px-5 py-2.5 rounded-full text-sm">
+              <Link href="/register" className="btn-premium text-white font-semibold px-5 py-2.5 rounded-full text-sm">
                 Get Started Free
               </Link>
             </>
@@ -330,13 +338,13 @@ export default function Home() {
           {/* CTAs */}
           <div className="animate-fadeInUp flex flex-col sm:flex-row items-center gap-4 mb-16" style={{ animationDelay: '0.3s' }}>
             {isAuthenticated ? (
-              <Link href="/chat" className="btn-glow text-white font-bold px-8 py-4 rounded-full text-base flex items-center gap-2">
+              <Link href="/chat" className="btn-premium text-white font-bold px-8 py-4 rounded-full text-base flex items-center gap-2">
                 Go to Chats
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
               </Link>
             ) : (
               <>
-                <Link href="/register" className="btn-glow text-white font-bold px-8 py-4 rounded-full text-base flex items-center gap-2">
+                <Link href="/register" className="btn-premium text-white font-bold px-8 py-4 rounded-full text-base flex items-center gap-2">
                   Start for Free
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
                 </Link>
@@ -558,7 +566,7 @@ export default function Home() {
                 />
                 <button
                   type="submit"
-                  className="btn-glow w-10 h-10 rounded-xl text-white flex items-center justify-center flex-shrink-0 transition-all active:scale-95"
+                  className="btn-premium w-10 h-10 rounded-xl text-white flex items-center justify-center flex-shrink-0 transition-all active:scale-95"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
                 </button>
@@ -650,10 +658,10 @@ export default function Home() {
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 {isAuthenticated ? (
-                  <Link href="/chat" className="btn-glow text-white font-bold px-8 py-4 rounded-full text-base">Enter App →</Link>
+                  <Link href="/chat" className="btn-premium text-white font-bold px-8 py-4 rounded-full text-base">Enter App →</Link>
                 ) : (
                   <>
-                    <Link href="/register" className="btn-glow text-white font-bold px-8 py-4 rounded-full text-base">Create Free Account</Link>
+                    <Link href="/register" className="btn-premium text-white font-bold px-8 py-4 rounded-full text-base">Create Free Account</Link>
                     <Link href="/login" className="glass glass-hover text-white font-semibold px-8 py-4 rounded-full text-base transition-all">Sign In</Link>
                   </>
                 )}
@@ -697,7 +705,7 @@ export default function Home() {
                     <p className="text-sm text-gray-500">Subscribe to product updates and newsletters.</p>
                     <form onSubmit={(e) => { e.preventDefault(); toast.success('Thanks for subscribing! 📬'); }} className="flex gap-2">
                       <input type="email" required placeholder="your@email.com" className="flex-1 bg-white/5 border border-white/10 focus:border-violet-500 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-600 outline-none transition-all" />
-                      <button type="submit" className="btn-glow text-white font-bold px-3 py-2 rounded-xl text-xs">→</button>
+                      <button type="submit" className="btn-premium text-white font-bold px-3 py-2 rounded-xl text-xs">→</button>
                     </form>
                   </div>
                 ) : (
