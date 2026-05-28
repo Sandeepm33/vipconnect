@@ -26,6 +26,34 @@ const useSocket = (registerListeners = false) => {
     // Chat events
     const handleNewMessage = ({ message, chatId }) => {
       addMessage(chatId, message);
+
+      const senderId = message.sender?._id || message.sender;
+      if (senderId && senderId !== user?._id) {
+        try {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) {
+            const ctx = new AudioContext();
+            const playBeep = (freq, startTime, duration) => {
+              const osc = ctx.createOscillator();
+              const gain = ctx.createGain();
+              osc.type = 'sine';
+              osc.frequency.setValueAtTime(freq, startTime);
+              gain.gain.setValueAtTime(0, startTime);
+              gain.gain.linearRampToValueAtTime(0.15, startTime + 0.01);
+              gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+              osc.connect(gain);
+              gain.connect(ctx.destination);
+              osc.start(startTime);
+              osc.stop(startTime + duration);
+            };
+            const now = ctx.currentTime;
+            playBeep(880, now, 0.12);
+            playBeep(1200, now + 0.08, 0.22);
+          }
+        } catch (err) {
+          console.error('Failed to play notification sound:', err);
+        }
+      }
     };
 
     const handleChatUpdated = ({ chatId, lastMessage }) => {
