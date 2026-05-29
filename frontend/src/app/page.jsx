@@ -58,13 +58,11 @@ export default function Home() {
   const router = useRouter();
   const { isAuthenticated, token } = useAuthStore();
   const [mounted, setMounted] = useState(false);
-  const [messages, setMessages] = useState([
+  const [messages] = useState([
     { id: 1, text: "Hey! Have you tried the new VipConnect? 🔥", sender: "sarah", time: "10:42 AM" },
     { id: 2, text: "Yes! The UI is absolutely stunning! Love it ✨", sender: "me", time: "10:43 AM" },
-    { id: 3, text: "Type a message below to try the real-time feel!", sender: "sarah", time: "10:43 AM" }
+    { id: 3, text: "It's so fast on both web and mobile! 🚀", sender: "sarah", time: "10:44 AM" }
   ]);
-  const [inputValue, setInputValue] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);
   const [activeFeature, setActiveFeature] = useState(0);
   const chatEndRef = useRef(null);
@@ -79,8 +77,13 @@ export default function Home() {
   }, [isAuthenticated, token]);
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isTyping]);
+    setMounted(true);
+    const localToken = localStorage.getItem('vipconnect_token');
+    if ((isAuthenticated && token) || localToken) {
+      if (token || localToken) initSocket(token || localToken);
+      router.replace('/chat');
+    }
+  }, [isAuthenticated, token]);
 
   const features = [
     {
@@ -129,32 +132,6 @@ export default function Home() {
     },
   ];
 
-  const handleSendMessage = (e) => {
-    e.preventDefault();
-    if (!inputValue.trim()) return;
-    const newMsg = { id: Date.now(), text: inputValue, sender: 'me', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) };
-    setMessages(prev => [...prev, newMsg]);
-    const userMsg = inputValue;
-    setInputValue('');
-    setIsTyping(true);
-    setTimeout(() => {
-      setIsTyping(false);
-      let reply = "That's awesome! ⚡";
-      if (userMsg.toLowerCase().includes('hello') || userMsg.toLowerCase().includes('hi')) reply = "Hello! Welcome to VipConnect! 👋 You're going to love it here!";
-      else if (userMsg.toLowerCase().includes('call') || userMsg.toLowerCase().includes('video')) reply = "Our video calls are HD quality with E2E encryption — zero compromise!";
-      else if (userMsg.toLowerCase().includes('group')) reply = "Groups support up to 5,000 members with powerful admin tools!";
-      else {
-        const replies = [
-          "VipConnect is blazing fast — built on real-time socket infrastructure! 🚀",
-          "You can share files up to 50MB, react to messages, and so much more!",
-          "Sign up for free and experience the future of messaging today!",
-          "We support voice messages, file sharing, and group video calls! 🎉",
-        ];
-        reply = replies[Math.floor(Math.random() * replies.length)];
-      }
-      setMessages(prev => [...prev, { id: Date.now() + 1, text: reply, sender: 'sarah', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
-    }, 1400);
-  };
 
   if (!mounted) return null;
 
@@ -460,18 +437,19 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── LIVE CHAT PREVIEW ── */}
-        <section id="preview" className="mb-32">
-          <div className="text-center mb-12">
-            <p className="text-cyan-400 font-semibold text-sm uppercase tracking-widest mb-3">Interactive Demo</p>
-            <h2 className="text-4xl sm:text-5xl font-black">Try it <span className="gradient-text">right now</span></h2>
-            <p className="text-gray-400 mt-4 max-w-xl mx-auto">Send a message and experience how VipConnect feels — live, instant, beautiful.</p>
+        {/* ── APP DASHBOARD PREVIEW ── */}
+        <section id="preview" className="mb-32 relative">
+          <div className="text-center mb-16">
+            <p className="text-cyan-400 font-semibold text-sm uppercase tracking-widest mb-3">App Interface</p>
+            <h2 className="text-4xl sm:text-5xl font-black">Experience the <span className="gradient-text">Future</span></h2>
+            <p className="text-gray-400 mt-4 max-w-xl mx-auto">A gorgeously crafted dashboard that makes communication effortless.</p>
           </div>
+          
+          {/* Ambient Glow Behind Mockup */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-[400px] bg-gradient-to-r from-violet-600/30 to-cyan-500/30 blur-[120px] rounded-full pointer-events-none -z-10" />
 
           {/* Chat Preview Widget */}
-          <div className="glass rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row h-[520px]"
-            style={{ boxShadow: '0 0 80px rgba(124,58,237,0.12)' }}>
-
+          <div className="glass-premium border border-white/10 rounded-[2rem] overflow-hidden shadow-[0_0_80px_rgba(139,92,246,0.15)] flex flex-col md:flex-row h-[560px] transform hover:scale-[1.01] transition-transform duration-500">
             {/* Sidebar */}
             <div className="hidden md:flex flex-col w-72 border-r border-white/5 bg-white/[0.02] flex-shrink-0">
               <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
@@ -529,48 +507,38 @@ export default function Home() {
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3 no-scrollbar flex flex-col">
+              <div className="flex-1 overflow-y-auto p-6 space-y-4 no-scrollbar flex flex-col relative z-10">
                 <div className="flex-1" />
                 {messages.map((msg) => (
-                  <div key={msg.id} className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm shadow-lg ${
+                  <div key={msg.id} className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'} animate-fadeInUp`} style={{ animationDelay: `${msg.id * 0.2}s` }}>
+                    <div className={`max-w-[80%] rounded-2xl px-5 py-3 text-sm shadow-xl ${
                       msg.sender === 'me'
-                        ? 'bg-gradient-to-br from-violet-600 to-purple-700 text-white rounded-tr-sm'
-                        : 'glass text-gray-200 rounded-tl-sm'
+                        ? 'bg-gradient-to-br from-violet-600 to-purple-800 text-white rounded-tr-sm'
+                        : 'glass text-gray-100 rounded-tl-sm border border-white/10'
                     }`}>
                       <p className="leading-relaxed">{msg.text}</p>
-                      <span className="block text-[9px] opacity-60 text-right mt-1">{msg.time}</span>
+                      <span className="block text-[10px] opacity-50 text-right mt-1.5 font-medium">{msg.time}</span>
                     </div>
                   </div>
                 ))}
-                {isTyping && (
-                  <div className="flex justify-start">
-                    <div className="glass rounded-2xl rounded-tl-sm px-4 py-3 flex gap-1.5 items-center">
-                      {[0, 150, 300].map(d => (
-                        <span key={d} className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: `${d}ms` }} />
-                      ))}
-                    </div>
-                  </div>
-                )}
-                <div ref={chatEndRef} />
               </div>
 
-              {/* Input */}
-              <form onSubmit={handleSendMessage} className="p-4 border-t border-white/5 bg-white/[0.02] flex gap-3">
-                <input
-                  type="text"
-                  className="flex-1 bg-white/5 border border-white/10 focus:border-violet-500 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 transition-all focus:ring-2 focus:ring-violet-500/20 outline-none"
-                  placeholder="Type to Sarah..."
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                />
-                <button
-                  type="submit"
-                  className="btn-premium w-10 h-10 rounded-xl text-white flex items-center justify-center flex-shrink-0 transition-all active:scale-95"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
-                </button>
-              </form>
+              {/* Static Banner replacing the input */}
+              <div className="p-5 border-t border-white/5 bg-white/[0.02] backdrop-blur-md relative overflow-hidden flex items-center justify-between">
+                <div className="absolute inset-0 bg-gradient-to-r from-violet-500/10 via-cyan-500/10 to-violet-500/10 opacity-50" style={{ animation: 'shimmer 3s infinite linear' }} />
+                <div className="flex items-center gap-3 relative z-10">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center animate-pulse">
+                    <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-white">Ready to join the conversation?</p>
+                    <p className="text-xs text-gray-400">Download the app or sign in now.</p>
+                  </div>
+                </div>
+                <Link href="/register" className="btn-premium px-6 py-2.5 rounded-full text-sm font-bold text-white shadow-lg relative z-10 whitespace-nowrap">
+                  Get Started
+                </Link>
+              </div>
             </div>
           </div>
         </section>
