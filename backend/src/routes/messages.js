@@ -12,6 +12,11 @@ router.get(
   asyncHandler(async (req, res) => {
     const { page = 1, limit = 50 } = req.query;
 
+    if (!require('mongoose').Types.ObjectId.isValid(req.params.chatId)) {
+      res.status(400);
+      throw new Error('Invalid chat ID format');
+    }
+
     const chat = await Chat.findOne({
       _id: req.params.chatId,
       members: req.user._id,
@@ -61,6 +66,11 @@ router.post(
   protect,
   asyncHandler(async (req, res) => {
     const { content, type, replyTo } = req.body;
+
+    if (!require('mongoose').Types.ObjectId.isValid(req.params.chatId)) {
+      res.status(400);
+      throw new Error('Invalid chat ID format');
+    }
 
     const chat = await Chat.findOne({
       _id: req.params.chatId,

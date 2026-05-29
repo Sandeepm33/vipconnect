@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import useChatStore from '@/store/chatStore';
 import useAuthStore from '@/store/authStore';
 import { format, isToday, isYesterday } from 'date-fns';
@@ -73,7 +73,7 @@ function ChatItem({ chat, isActive }) {
 
   return (
     <div
-      onClick={() => router.push(`/chat/${chat._id}`)}
+      onClick={() => router.push(`/chat?id=${chat._id}`)}
       onMouseDown={() => setPressed(true)}
       onMouseUp={() => setPressed(false)}
       onMouseLeave={() => setPressed(false)}
@@ -154,7 +154,9 @@ function ChatItem({ chat, isActive }) {
 
 export default function ChatList() {
   const { chats, isLoadingChats, fetchChats } = useChatStore();
-  const { id } = useParams() || {};
+  const searchParams = useSearchParams();
+  const rawId = searchParams ? searchParams.get('id') : null;
+  const id = (rawId === 'undefined' || rawId === 'null') ? null : rawId;
 
   useEffect(() => {
     fetchChats();

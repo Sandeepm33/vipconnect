@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import useChatStore from '@/store/chatStore';
 import useAuthStore from '@/store/authStore';
 import useCallStore from '@/store/callStore';
@@ -12,7 +12,9 @@ import { getSocket } from '@/lib/socket';
 import { format } from 'date-fns';
 
 export default function ChatWindow() {
-  const { id } = useParams();
+  const searchParams = useSearchParams();
+  const rawId = searchParams ? searchParams.get('id') : null;
+  const id = (rawId === 'undefined' || rawId === 'null') ? null : rawId;
   const router = useRouter();
   const { activeChat, messages, fetchMessages, typingUsers, onlineUsers } = useChatStore();
   const { user } = useAuthStore();

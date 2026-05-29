@@ -1,10 +1,6 @@
 import { io } from 'socket.io-client';
 
 let SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000';
-if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && !process.env.NEXT_PUBLIC_SOCKET_URL) {
-  // If we are on a tunnel and no env is set, fallback to relative path
-  SOCKET_URL = ''; 
-}
 
 let socket = null;
 

@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import useAuthStore from '@/store/authStore';
 import useChatStore from '@/store/chatStore';
 import useCallStore from '@/store/callStore';
@@ -10,14 +10,17 @@ import Sidebar from '@/components/sidebar/Sidebar';
 import IncomingCallModal from '@/components/calls/IncomingCallModal';
 import CallWindow from '@/components/calls/CallWindow';
 
+import { Suspense } from 'react';
+
 function SocketInitializer() {
   useSocket(true);
   return null;
 }
 
-export default function MainLayout({ children }) {
+function MainLayoutContent({ children }) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { isAuthenticated, token, fetchMe } = useAuthStore();
   const { fetchChats } = useChatStore();
   const { incomingCall, isCallActive } = useCallStore();
@@ -43,27 +46,22 @@ export default function MainLayout({ children }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
-  // Before mount: always render the layout shell (same on server & client → no hydration mismatch).
-  // After mount: if no auth at all, redirect to login (handled in useEffect above).
-  // Zustand persist rehydration happens client-side; isAuthenticated may briefly be false even
-  // when a token exists — so we don't block render here, we let the useEffect handle redirects.
   if (!mounted) {
-    // Render a minimal, consistent skeleton on both server and client during hydration
     return (
       <div className="h-[100dvh] w-full flex overflow-hidden bg-chat-bg">
-        {/* Same DOM structure as the real layout so hydration is consistent */}
         <div className="h-full flex-shrink-0" />
         <main className="flex flex-col overflow-hidden flex-1" />
       </div>
     );
   }
 
-  // After mount: if truly no auth token anywhere, show nothing (redirect is in flight)
   if (!isAuthenticated && !localStorage.getItem('vipconnect_token')) {
     return null;
   }
 
-  const isChatRoute = pathname.startsWith('/chat/');
+  const rawId = searchParams?.get('id');
+  const validId = (rawId && rawId !== 'undefined' && rawId !== 'null') ? rawId : null;
+  const isChatRoute = pathname.startsWith('/chat') && !!validId;
 
   return (
     <div className="h-[100dvh] w-full flex overflow-hidden bg-chat-bg">
@@ -85,5 +83,18 @@ export default function MainLayout({ children }) {
       {/* Active Call Window */}
       {isCallActive && <CallWindow />}
     </div>
+  );
+}
+
+export default function MainLayout({ children }) {
+  return (
+    <Suspense fallback={
+      <div className="h-[100dvh] w-full flex overflow-hidden bg-chat-bg">
+        <div className="h-full flex-shrink-0" />
+        <main className="flex flex-col overflow-hidden flex-1" />
+      </div>
+    }>
+      <MainLayoutContent>{children}</MainLayoutContent>
+    </Suspense>
   );
 }

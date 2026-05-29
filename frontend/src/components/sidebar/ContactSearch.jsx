@@ -57,7 +57,7 @@ export default function ContactSearch({ onClose }) {
   const handleSelectUser = async (user) => {
     try {
       const chat = await createChat(user._id);
-      router.push(`/chat/${chat._id}`);
+      router.push(`/chat?id=${chat._id}`);
       onClose();
     } catch {
       toast.error('Could not open chat');

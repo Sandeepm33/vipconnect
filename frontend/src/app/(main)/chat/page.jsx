@@ -1,12 +1,50 @@
 'use client';
 
+import { useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import useChatStore from '@/store/chatStore';
+import ChatWindow from '@/components/chat/ChatWindow';
+import api from '@/lib/api';
+
 const FEATURES = [
   { icon: '🔒', label: 'End-to-end encrypted',  color: 'rgba(124,58,237,0.8)' },
   { icon: '⚡', label: 'Real-time messaging',    color: 'rgba(56,189,248,0.8)' },
   { icon: '📹', label: 'HD video calls',          color: 'rgba(52,211,153,0.8)' },
 ];
 
-export default function ChatHome() {
+function ChatContent() {
+  const searchParams = useSearchParams();
+  const rawId = searchParams.get('id');
+  // Prevent string "undefined" or "null" from triggering backend CastError
+  const id = (rawId === 'undefined' || rawId === 'null') ? null : rawId;
+  const { setActiveChat, activeChat } = useChatStore();
+
+  useEffect(() => {
+    if (!id) {
+      setActiveChat(null);
+      return;
+    }
+    // Fetch chat details
+    api.get(`/chats/${id}`).then((data) => {
+      setActiveChat(data.chat);
+    }).catch(console.error);
+
+    return () => {
+      setActiveChat(null);
+    };
+  }, [id, setActiveChat]);
+
+  if (id) {
+    if (!activeChat) {
+      return (
+        <div className="h-full flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-primary-500/30 border-t-primary-500 rounded-full animate-spin" />
+        </div>
+      );
+    }
+    return <ChatWindow />;
+  }
+
   return (
     <div
       className="h-full flex flex-col items-center justify-center relative overflow-hidden"
@@ -162,5 +200,17 @@ export default function ChatHome() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ChatHome() {
+  return (
+    <Suspense fallback={
+      <div className="h-full flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-primary-500/30 border-t-primary-500 rounded-full animate-spin" />
+      </div>
+    }>
+      <ChatContent />
+    </Suspense>
   );
 }
