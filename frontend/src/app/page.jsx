@@ -294,15 +294,15 @@ export default function Home() {
         {/* CTA Buttons */}
         <div className="flex items-center gap-3">
           {isAuthenticated ? (
-            <Link href="/chat" className="btn-premium text-white font-semibold px-5 py-2.5 rounded-full text-sm">
+            <Link href="/chat" className="btn-premium text-white font-semibold px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm whitespace-nowrap">
               Open App
             </Link>
           ) : (
             <>
-              <Link href="/login" className="text-gray-300 hover:text-white px-4 py-2 text-sm font-medium transition-colors">
+              <Link href="/login" className="text-gray-300 hover:text-white px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-colors whitespace-nowrap">
                 Sign In
               </Link>
-              <Link href="/register" className="btn-premium text-white font-semibold px-5 py-2.5 rounded-full text-sm">
+              <Link href="/register" className="btn-premium text-white font-semibold px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm whitespace-nowrap">
                 Get Started Free
               </Link>
             </>

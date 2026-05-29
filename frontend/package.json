@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:mobile": "next build && cap sync",
     "start": "next start",
     "lint": "next lint"
   },
