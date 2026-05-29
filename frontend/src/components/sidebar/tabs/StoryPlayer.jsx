@@ -485,7 +485,7 @@ export default function StoryPlayer({ group, onClose }) {
         </div>
       )}
       {/* ── KEYFRAMES ANIMATIONS ───────────────────────────────────────── */}
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @keyframes slideUp {
           from { transform: translateY(100%); }
           to { transform: translateY(0); }
@@ -493,7 +493,7 @@ export default function StoryPlayer({ group, onClose }) {
         .animate-slide-up {
           animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
-      `}</style>
+      ` }} />
     </div>
   );
 }

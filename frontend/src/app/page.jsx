@@ -160,7 +160,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#030508] text-white overflow-x-hidden relative" style={{ fontFamily: "'Inter', sans-serif" }}>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
         @keyframes float-particle {
           0% { transform: translateY(0px) translateX(0px) scale(1); opacity: 0.4; }
@@ -256,7 +256,7 @@ export default function Home() {
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .hero-bg { background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(139,92,246,0.15), transparent 70%), radial-gradient(ellipse 50% 50% at 80% 50%, rgba(6,182,212,0.08), transparent 60%), #030508; }
-      `}</style>
+      ` }} />
 
       {/* Hero Background */}
       <div className="fixed inset-0 z-0 pointer-events-none">

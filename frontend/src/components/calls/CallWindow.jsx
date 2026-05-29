@@ -271,7 +271,7 @@ export default function CallWindow() {
       className="fixed inset-0 z-[200] overflow-hidden bg-black"
       style={{ fontFamily: "'Inter', sans-serif" }}
     >
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
         @keyframes callPulse {
@@ -447,7 +447,7 @@ export default function CallWindow() {
           color: white;
           z-index: 10;
         }
-      `}</style>
+      ` }} />
 
       {/* ── Background ── */}
       <div className="call-bg absolute inset-0" />

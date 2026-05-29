@@ -74,7 +74,7 @@ export default function IncomingCallModal() {
 
   return (
     <div className="fixed bottom-5 right-5 z-[300] animate-scale-in" style={{ fontFamily: "'Inter', sans-serif" }}>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         @keyframes scaleIn {
           from { opacity: 0; transform: scale(0.85) translateY(12px); }
@@ -174,7 +174,7 @@ export default function IncomingCallModal() {
           font-size: 11px; font-weight: 600;
           color: rgba(167,139,250,1);
         }
-      `}</style>
+      ` }} />
 
       <div className="incoming-card">
 

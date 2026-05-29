@@ -34,7 +34,7 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen w-full bg-[#080c14] flex overflow-hidden relative" style={{ fontFamily: "'Inter', sans-serif" }}>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(24px); }
@@ -134,7 +134,7 @@ export default function RegisterPage() {
           background: linear-gradient(135deg, rgba(124,58,237,0.5), rgba(109,40,217,0.6));
           border: 1px solid rgba(124,58,237,0.3);
         }
-      `}</style>
+      ` }} />
 
       {/* ── LEFT PANEL: Visual Showcase (hidden on mobile) ── */}
       <div className="hidden lg:flex lg:w-[55%] xl:w-[58%] flex-shrink-0 relative overflow-hidden flex-col">

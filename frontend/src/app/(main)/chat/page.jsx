@@ -15,7 +15,7 @@ export default function ChatHome() {
         fontFamily: "'Inter', sans-serif",
       }}
     >
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
         @keyframes floatUp {
@@ -110,7 +110,7 @@ export default function ChatHome() {
           animation: floatUp 0.6s ease both;
           animation-delay: 0.4s;
         }
-      `}</style>
+      ` }} />
 
       {/* Subtle mesh background dots */}
       <div style={{

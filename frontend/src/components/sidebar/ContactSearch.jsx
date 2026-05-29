@@ -101,7 +101,7 @@ export default function ContactSearch({ onClose }) {
 
   return (
     <div className="flex flex-col h-full" style={{ fontFamily: "'Inter', sans-serif" }}>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
         .cs-search-wrap {
@@ -190,7 +190,7 @@ export default function ContactSearch({ onClose }) {
           color: rgba(107,114,128,1);
           padding: 8px 16px 4px;
         }
-      `}</style>
+      ` }} />
 
       {/* ── Search Header ────────────────────────────────────────── */}
       <div style={{ padding: '12px 12px 8px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
